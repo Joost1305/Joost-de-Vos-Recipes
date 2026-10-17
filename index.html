@@ -44,22 +44,26 @@
   .header-nav-btn:hover, .header-nav-btn.active{background:var(--crust);color:var(--rye);}
 
   .inspiration-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap;}
-  .planning-list{display:flex;flex-direction:column;gap:8px;margin-bottom:24px;}
-  .planning-row{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;}
-  .planning-row.on{border-color:var(--crust);}
-  .planning-check-label{display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:500;}
-  .planning-check-label input[type=checkbox]{width:18px;height:18px;accent-color:var(--crust);flex-shrink:0;}
-  .planning-inputs{display:flex;gap:16px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);flex-wrap:wrap;}
-  .planning-inputs label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted2);font-weight:500;}
-  .planning-inputs input{padding:8px 10px;border:1px solid var(--border2);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:14px;background:#fff;color:var(--ink);width:130px;}
-  .planning-recalc{margin-top:8px;}
-  .planning-recalc>h3{font-size:18px;margin:0 0 14px;}
-  .planning-recipe-block{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:16px;}
-  .planning-total{background:var(--rye);color:var(--bg);border-radius:14px;padding:20px;margin-top:20px;}
-  .planning-total-label{font-size:13px;text-transform:uppercase;letter-spacing:.03em;color:#C9A97A;margin-bottom:6px;}
-  .planning-total-value{font-family:'Fraunces',serif;font-size:32px;font-weight:600;margin-bottom:12px;}
-  .planning-total-breakdown{display:flex;flex-direction:column;gap:5px;font-size:13px;font-family:'JetBrains Mono',monospace;padding-top:12px;border-top:1px solid rgba(255,255,255,.15);}
-  .planning-total-breakdown div{display:flex;justify-content:space-between;gap:12px;color:#E4D5BC;}
+  .bake-intro{font-size:13.5px;color:var(--muted2);margin:0 0 14px;}
+  .bake-list{display:flex;flex-direction:column;gap:6px;margin-bottom:20px;}
+  .bake-row{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px 12px;user-select:none;-webkit-user-select:none;}
+  .bake-row.on{border-color:var(--crust);}
+  .bake-row.dragging{opacity:.5;box-shadow:0 6px 18px rgba(0,0,0,.12);}
+  .bake-row .drag-handle{padding:6px 4px;color:var(--muted);}
+  .bake-row .drag-handle svg{width:18px;height:18px;}
+  .bake-check-label{display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:500;flex:1;min-width:0;}
+  .bake-check-label input[type=checkbox]{width:20px;height:20px;accent-color:var(--crust);flex-shrink:0;}
+  .bake-title{overflow:hidden;text-overflow:ellipsis;}
+  .bake-leaven{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--muted2);white-space:nowrap;}
+  .bake-actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+  .bake-actions button{padding:8px 12px;border-radius:10px;border:1px solid var(--border2);font-size:13px;color:var(--muted2);background:var(--card);}
+  .bake-actions button:hover{border-color:var(--crust);color:var(--crust);}
+  .bake-total{background:var(--rye);color:var(--bg);border-radius:14px;padding:20px;margin-top:4px;}
+  .bake-total-label{font-size:13px;text-transform:uppercase;letter-spacing:.03em;color:#C9A97A;margin-bottom:6px;}
+  .bake-total-value{font-family:'Fraunces',serif;font-size:32px;font-weight:600;margin-bottom:12px;}
+  .bake-total-breakdown{display:flex;flex-direction:column;gap:5px;font-size:13px;font-family:'JetBrains Mono',monospace;padding-top:12px;border-top:1px solid rgba(255,255,255,.15);}
+  .bake-total-breakdown div{display:flex;justify-content:space-between;gap:12px;color:#E4D5BC;}
+  .bake-note{font-size:12.5px;color:#C9A97A;margin-top:10px;}
   .inspiration-head h2{font-size:22px;font-weight:600;margin:0;}
   .inspiration-head .new-recipe-btn{width:auto;padding:10px 16px;}
   .inspiration-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
@@ -515,7 +519,7 @@
     </div>
     <div class="header-tools">
       <button class="header-nav-btn" id="navInspirationBtn">✨ Inspiratie</button>
-      <button class="header-nav-btn" id="navPlanningBtn">📋 Planning</button>
+      <button class="header-nav-btn" id="navBakeBtn">🥖 Bakken</button>
       <div class="import-menu-wrap">
         <button class="header-icon-btn" id="importMenuBtn" title="Recept importeren"></button>
         <div class="import-menu hidden" id="importMenu">
@@ -547,12 +551,17 @@
     </div>
     <div id="inspirationGrid" class="inspiration-grid"></div>
   </div>
-  <div id="viewPlanning" class="hidden">
+  <div id="viewBake" class="hidden">
     <div class="inspiration-head">
-      <h2 class="font-display">Bakery planning</h2>
-      <button class="new-recipe-btn" id="exportPlanningBtn">📄 Exporteer als PDF</button>
+      <h2 class="font-display">Bakken</h2>
+      <button class="new-recipe-btn" id="exportBakeBtn">📄 PDF van selectie</button>
     </div>
-    <div id="planningContent"></div>
+    <p class="bake-intro">Vink de broden aan die je gaat bakken. Sleep aan het handvat om de volgorde aan te passen; die volgorde wordt bewaard en ook gebruikt in de Brood-lijst.</p>
+    <div class="bake-actions">
+      <button id="bakeSelectNone">Selectie wissen</button>
+    </div>
+    <div id="bakeList" class="bake-list"></div>
+    <div id="bakeSummary"></div>
   </div>
 </main>
 
@@ -830,7 +839,7 @@ const SCHEMA = [
 // ---------------------------------------------------------------------------
 // State + persistence (localStorage — this file runs standalone, no server)
 // ---------------------------------------------------------------------------
-let state = { scales:{}, listIds:[], photos:{}, attachments:{}, ingredientPrices:{}, priceAliases:{}, inspirations:[], useLargeUnits:false, recipes:[], selectedId:null, activeCategory:"__all__", searchQuery:"", mobileView:"list" };
+let state = { breadOrder:[], scales:{}, listIds:[], photos:{}, attachments:{}, ingredientPrices:{}, priceAliases:{}, inspirations:[], useLargeUnits:false, recipes:[], selectedId:null, activeCategory:"__all__", searchQuery:"", mobileView:"list" };
 
 function newId(){ return "r" + Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
 function findRecipe(id){ return state.recipes.find(x=>x.id===id); }
@@ -1160,6 +1169,7 @@ function getVisibleRecipes(){
       return getAllIngredientsFlat(r).some(i=>i.name.toLowerCase().includes(q));
     });
   } else if(state.activeCategory && state.activeCategory !== "__all__"){
+    if(state.activeCategory === "Brood") return getOrderedBreadRecipes();
     list = list.filter(r => (r.category || "Overig") === state.activeCategory);
   }
   return list;
@@ -1190,6 +1200,7 @@ function subscribeToRealtimeUpdates(){
       renderSidebar();
       renderDetail();
       renderFloatBar();
+      if(!document.getElementById("viewBake").classList.contains("hidden")) renderBake();
     })
     .subscribe();
 }
@@ -1204,6 +1215,7 @@ function applyStateData(parsed){
   state.werkschema = parsed.werkschema || null;
   state.priceAliases = parsed.priceAliases || {};
   state.useLargeUnits = !!parsed.useLargeUnits;
+  state.breadOrder = parsed.breadOrder || [];
   if(parsed.recipes && parsed.recipes.length) state.recipes = parsed.recipes;
   if(state.selectedId && state.selectedId !== "__schema__" && !findRecipe(state.selectedId)) state.selectedId = null;
 }
@@ -1273,7 +1285,7 @@ async function saveState(){
       scales: state.scales, listIds: state.listIds, photos: state.photos,
       attachments: state.attachments, ingredientPrices: state.ingredientPrices,
       inspirations: state.inspirations, priceAliases: state.priceAliases, werkschema: state.werkschema,
-      recipes: state.recipes, useLargeUnits: state.useLargeUnits,
+      recipes: state.recipes, useLargeUnits: state.useLargeUnits, breadOrder: state.breadOrder,
     };
     const { error } = await supabaseClient
       .from("bakboek_store")
@@ -3345,9 +3357,9 @@ let editingPinId = null;       // set to open pin for editing (currently: create
 
 function hideCustomViews(){
   document.getElementById("viewInspiration").classList.add("hidden");
-  document.getElementById("viewPlanning").classList.add("hidden");
+  document.getElementById("viewBake").classList.add("hidden");
   document.getElementById("navInspirationBtn").classList.remove("active");
-  document.getElementById("navPlanningBtn").classList.remove("active");
+  document.getElementById("navBakeBtn").classList.remove("active");
 }
 
 function showInspirationView(show){
@@ -3362,200 +3374,244 @@ function showInspirationView(show){
   }
 }
 
-function showPlanningView(show){
+function showBakeView(show){
   hideCustomViews();
   document.getElementById("viewRecipes").classList.toggle("hidden", show);
   document.getElementById("categoryTabbar").classList.toggle("hidden", show);
   document.getElementById("floatBar").classList.toggle("hidden", show || state.listIds.length===0);
   if(show){
-    document.getElementById("viewPlanning").classList.remove("hidden");
-    document.getElementById("navPlanningBtn").classList.add("active");
-    renderPlanning();
+    document.getElementById("viewBake").classList.remove("hidden");
+    document.getElementById("navBakeBtn").classList.add("active");
+    renderBake();
   }
 }
 
-// --- Bakery planning: pick recipes, set target loaves/weight, recalculate,
-// and total up the leaven/desem needed across everything selected. Session
-// only — this is a "today's bake" worksheet, not a saved preference. ---
-let planningSelections = {}; // { [recipeId]: { loaves, weightPerLoaf } }
+// --- Bakken: tick bread recipes, see the total levain to build, export the
+// full recipes as one PDF. Selection is session-only (today's bake); the
+// drag-and-drop order is saved (state.breadOrder) and shared with the
+// sidebar's Brood list. Amounts follow each recipe's own scale, so the PDF
+// and the levain total always match. ---
+let bakeSelection = new Set();
 
 function isLeavenGroupName(name){
   if(!name) return false;
   const n = name.toLowerCase();
-  return n.includes("desem") || n.includes("levain") || n.includes("leaven") || n.includes("starter") || n.includes("zuurdesem");
+  return n.includes("desem") || n.includes("levain") || n.includes("leaven") || n.includes("starter") || n.includes("poolish") || n.includes("biga");
 }
 
-function getBaseWeightPerLoaf(r){
-  const total = getAllIngredientsFlat(r).reduce((s,i)=>s+i.g,0);
-  const loaves = r.loaves || 1;
-  return total / loaves;
+// Leaven for one recipe at its current scale. Prefers dedicated groups
+// (e.g. "Desem"); if there are none, falls back to single ingredients named
+// desem/levain inside the dough, so flat recipes still count.
+function getRecipeLeaven(r){
+  const scale = getScale(r.id);
+  const parts = [];
+  const groups = getIngredientGroups(r);
+  groups.forEach(g=>{
+    if(isLeavenGroupName(g.name)){
+      const w = (g.ingredients||[]).reduce((s,i)=>s+((i.unit||"g")==="g"?i.g:0),0) * scale;
+      if(w > 0) parts.push({ label: g.name, weight: w });
+    }
+  });
+  if(parts.length === 0){
+    groups.forEach(g=>{
+      (g.ingredients||[]).forEach(i=>{
+        if((i.unit||"g")==="g" && isLeavenGroupName(i.name) && i.g > 0){
+          parts.push({ label: i.name, weight: i.g * scale });
+        }
+      });
+    });
+  }
+  return { total: parts.reduce((s,p)=>s+p.weight,0), parts };
 }
 
-function getPlanningScale(r, sel){
-  const total = getAllIngredientsFlat(r).reduce((s,i)=>s+i.g,0);
-  if(!total) return 1;
-  const desiredTotal = (sel.loaves||0) * (sel.weightPerLoaf||0);
-  return desiredTotal > 0 ? desiredTotal / total : 0;
+function getOrderedBreadRecipes(){
+  const bread = state.recipes.filter(r=>(r.category||"Overig")==="Brood");
+  const order = state.breadOrder || [];
+  const pos = id=>{ const i = order.indexOf(id); return i === -1 ? Infinity : i; };
+  return bread.slice().sort((a,b)=>{
+    const pa = pos(a.id), pb = pos(b.id);
+    if(pa !== pb) return pa - pb;
+    return a.title.localeCompare(b.title,"nl");
+  });
 }
 
-function computeTotalLeaven(){
+function getSelectedBreadRecipes(){
+  return getOrderedBreadRecipes().filter(r=>bakeSelection.has(r.id));
+}
+
+function computeBakeLeaven(){
   let total = 0;
   const breakdown = [];
-  Object.entries(planningSelections).forEach(([id, sel])=>{
-    const r = findRecipe(id);
-    if(!r || !sel.loaves || !sel.weightPerLoaf) return;
-    const scale = getPlanningScale(r, sel);
-    getIngredientGroups(r).forEach(g=>{
-      if(isLeavenGroupName(g.name)){
-        const w = (g.ingredients||[]).reduce((s,i)=>s+i.g,0) * scale;
-        if(w > 0){ total += w; breakdown.push({ recipe: r.title, group: g.name, weight: w }); }
-      }
-    });
+  getSelectedBreadRecipes().forEach(r=>{
+    const lv = getRecipeLeaven(r);
+    lv.parts.forEach(p=>{ total += p.weight; breakdown.push({ recipe: r.title, label: p.label, weight: p.weight }); });
   });
   return { total, breakdown };
 }
 
-function renderPlanning(){
-  const el = document.getElementById("planningContent");
-  const broodRecipes = state.recipes.filter(r=>r.category==="Brood").sort((a,b)=>a.title.localeCompare(b.title,"nl"));
-  if(broodRecipes.length === 0){
-    el.innerHTML = `<p class="journal-empty">Nog geen Brood-recepten om te plannen.</p>`;
+function escapeBakeHtml(s){
+  return String(s||"").replace(/[&<>"]/g, ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]));
+}
+
+function renderBake(){
+  const listEl = document.getElementById("bakeList");
+  const recipes = getOrderedBreadRecipes();
+  // drop selections for recipes that no longer exist
+  bakeSelection.forEach(id=>{ if(!findRecipe(id)) bakeSelection.delete(id); });
+
+  if(recipes.length === 0){
+    listEl.innerHTML = `<p class="journal-empty">Nog geen Brood-recepten.</p>`;
+    renderBakeSummary();
     return;
   }
+  listEl.innerHTML = recipes.map(r=>{
+    const on = bakeSelection.has(r.id);
+    const lv = getRecipeLeaven(r);
+    const scale = getScale(r.id);
+    const scaleTxt = scale !== 1 ? ` · ${fmt(scale)}×` : "";
+    const lvTxt = lv.total > 0 ? `${formatAmount(lv.total,"g")} desem${scaleTxt}` : (scaleTxt ? scaleTxt.slice(3) : "");
+    return `<div class="bake-row ${on?'on':''}" data-id="${r.id}">
+      <span class="drag-handle" title="Sleep om te verplaatsen">${ICONS.grip}</span>
+      <label class="bake-check-label">
+        <input type="checkbox" class="bake-check" data-id="${r.id}" ${on?'checked':''}>
+        <span class="bake-title">${escapeBakeHtml(r.title)}</span>
+      </label>
+      <span class="bake-leaven">${lvTxt}</span>
+    </div>`;
+  }).join("");
 
-  const selectedIds = Object.keys(planningSelections).filter(id=>planningSelections[id].selected);
-  const { total: totalLeaven, breakdown } = computeTotalLeaven();
-
-  el.innerHTML = `
-    <div class="planning-list">
-      ${broodRecipes.map(r=>{
-        const sel = planningSelections[r.id] || {};
-        const checked = !!sel.selected;
-        const defaultLoaves = r.loaves || 1;
-        const defaultWeight = Math.round(getBaseWeightPerLoaf(r));
-        return `<div class="planning-row ${checked?'on':''}">
-          <label class="planning-check-label">
-            <input type="checkbox" class="planning-check" data-id="${r.id}" ${checked?'checked':''}>
-            <span>${r.title}</span>
-          </label>
-          ${checked ? `
-            <div class="planning-inputs">
-              <label>Aantal broden<input type="number" class="planning-loaves" data-id="${r.id}" min="1" step="1" value="${sel.loaves ?? defaultLoaves}"></label>
-              <label>Gewicht per brood (g)<input type="number" class="planning-weight" data-id="${r.id}" min="1" step="1" value="${sel.weightPerLoaf ?? defaultWeight}"></label>
-            </div>
-          ` : ""}
-        </div>`;
-      }).join("")}
-    </div>
-
-    ${selectedIds.length ? `
-      <div class="planning-recalc">
-        <h3 class="font-display">Herberekende recepten</h3>
-        ${selectedIds.map(id=>{
-          const r = findRecipe(id);
-          if(!r) return "";
-          const sel = planningSelections[id];
-          if(!sel.loaves || !sel.weightPerLoaf) return "";
-          const scale = getPlanningScale(r, sel);
-          return `<div class="planning-recipe-block">
-            <div class="brood-group-title">${r.title} — ${sel.loaves} × ${sel.weightPerLoaf} g</div>
-            ${renderBroodGroupsHTML(r, scale)}
-          </div>`;
-        }).join("")}
-      </div>
-      <div class="planning-total">
-        <div class="planning-total-label">Totaal desem/levain aan te bouwen</div>
-        <div class="planning-total-value">${formatAmount(totalLeaven, "g")}</div>
-        ${breakdown.length ? `<div class="planning-total-breakdown">
-          ${breakdown.map(b=>`<div><span>${b.recipe} — ${b.group}</span><span>${formatAmount(b.weight,"g")}</span></div>`).join("")}
-        </div>` : `<p class="cost-note">Geen van de geselecteerde recepten heeft een herkenbare desem/levain-groep.</p>`}
-      </div>
-    ` : `<p class="journal-empty">Vink recepten aan en vul aantal + gewicht in om de berekening te zien.</p>`}
-  `;
-
-  el.querySelectorAll(".planning-check").forEach(cb=>{
+  listEl.querySelectorAll(".bake-check").forEach(cb=>{
     cb.addEventListener("change", ()=>{
-      const id = cb.dataset.id;
-      if(!planningSelections[id]) planningSelections[id] = {};
-      planningSelections[id].selected = cb.checked;
-      renderPlanning();
+      if(cb.checked) bakeSelection.add(cb.dataset.id); else bakeSelection.delete(cb.dataset.id);
+      cb.closest(".bake-row").classList.toggle("on", cb.checked);
+      renderBakeSummary();
     });
   });
-  el.querySelectorAll(".planning-loaves, .planning-weight").forEach(input=>{
-    input.addEventListener("change", ()=>{
-      const id = input.dataset.id;
-      if(!planningSelections[id]) planningSelections[id] = {};
-      const val = Math.max(1, parseInt(input.value,10) || 1);
-      if(input.classList.contains("planning-loaves")) planningSelections[id].loaves = val;
-      else planningSelections[id].weightPerLoaf = val;
-      renderPlanning();
-    });
+  renderBakeSummary();
+}
+
+function renderBakeSummary(){
+  const el = document.getElementById("bakeSummary");
+  const selected = getSelectedBreadRecipes();
+  const btn = document.getElementById("exportBakeBtn");
+  btn.textContent = selected.length ? `📄 PDF van selectie (${selected.length})` : "📄 PDF van selectie";
+  if(selected.length === 0){
+    el.innerHTML = `<p class="journal-empty">Vink recepten aan om de totale hoeveelheid desem te zien.</p>`;
+    return;
+  }
+  const { total, breakdown } = computeBakeLeaven();
+  const missing = selected.filter(r=>getRecipeLeaven(r).total === 0).map(r=>r.title);
+  el.innerHTML = `<div class="bake-total">
+    <div class="bake-total-label">Totaal desem/levain aan te bouwen</div>
+    <div class="bake-total-value">${formatAmount(total,"g")}</div>
+    ${breakdown.length ? `<div class="bake-total-breakdown">
+      ${breakdown.map(b=>`<div><span>${escapeBakeHtml(b.recipe)} · ${escapeBakeHtml(b.label)}</span><span>${formatAmount(b.weight,"g")}</span></div>`).join("")}
+    </div>` : ""}
+    ${missing.length ? `<div class="bake-note">Geen desem gevonden in: ${missing.map(escapeBakeHtml).join(", ")}</div>` : ""}
+    <div class="bake-note">Hoeveelheden volgen de schaal die per recept is ingesteld.</div>
+  </div>`;
+}
+
+// Generic pointer-based drag-and-drop (mouse + touch) with a drop callback.
+function enableBakeSortable(container, rowSelector, onDrop){
+  container.addEventListener("pointerdown", (e)=>{
+    const handle = e.target.closest(".drag-handle");
+    if(!handle) return;
+    const dragEl = handle.closest(rowSelector);
+    if(!dragEl) return;
+    e.preventDefault();
+    dragEl.classList.add("dragging");
+    const onMove = (ev)=>{
+      ev.preventDefault();
+      const y = ev.clientY;
+      const rows = Array.from(container.querySelectorAll(rowSelector)).filter(r=>r!==dragEl);
+      let placed = false;
+      for(const row of rows){
+        const rect = row.getBoundingClientRect();
+        if(y < rect.top + rect.height/2){ container.insertBefore(dragEl, row); placed = true; break; }
+      }
+      if(!placed) container.appendChild(dragEl);
+    };
+    const onUp = ()=>{
+      dragEl.classList.remove("dragging");
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+      onDrop(Array.from(container.querySelectorAll(rowSelector)).map(r=>r.dataset.id));
+    };
+    window.addEventListener("pointermove", onMove, { passive:false });
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
   });
 }
 
-async function exportPlanningPDF(){
-  if(typeof window.jspdf === "undefined"){ showToast("PDF-maker niet beschikbaar in deze browser."); return; }
-  const selectedIds = Object.keys(planningSelections).filter(id=>{
-    const s = planningSelections[id];
-    return s.selected && s.loaves && s.weightPerLoaf;
-  });
-  if(selectedIds.length === 0){ showToast("Selecteer minstens één recept met aantal en gewicht."); return; }
+function setBreadOrder(ids){
+  const prev = (state.breadOrder || []).join("|");
+  if(prev === ids.join("|")) return;
+  state.breadOrder = ids;
+  saveState();
+}
 
-  showToast("PDF wordt gemaakt…");
+function writeBakeSummaryToPdf(doc, recipes){
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+  const margin = 42;
+  let y = margin;
+  function ensureSpace(h){ if(y + h > pageH - margin){ doc.addPage(); y = margin; } }
+  function writeLines(text, lh, x){
+    const lines = doc.splitTextToSize(text, pageW - margin*2 - ((x||margin)-margin));
+    lines.forEach(line=>{ ensureSpace(lh); doc.text(line, x||margin, y); y += lh; });
+  }
+  doc.setFont("helvetica","bold"); doc.setFontSize(22); doc.setTextColor(30,20,10);
+  writeLines("Bakken", 26);
+  doc.setFont("helvetica","normal"); doc.setFontSize(10); doc.setTextColor(110,95,75);
+  writeLines(new Date().toLocaleDateString("nl-NL", { weekday:"long", day:"numeric", month:"long", year:"numeric" }), 16);
+  y += 10;
+
+  doc.setFont("helvetica","bold"); doc.setFontSize(13); doc.setTextColor(30,20,10);
+  writeLines("Recepten", 18);
+  doc.setFont("helvetica","normal"); doc.setFontSize(11); doc.setTextColor(40,30,20);
+  recipes.forEach((r,i)=>{
+    const s = getScale(r.id);
+    writeLines(`${i+1}.  ${r.title}${s !== 1 ? `  (${fmt(s)}×)` : ""}`, 16);
+  });
+  y += 12;
+
+  const { total, breakdown } = computeBakeLeaven();
+  doc.setDrawColor(210,190,150); ensureSpace(10); doc.line(margin, y, pageW-margin, y); y += 22;
+  doc.setFont("helvetica","bold"); doc.setFontSize(15); doc.setTextColor(30,20,10);
+  writeLines(`Totaal desem/levain: ${formatAmount(total,"g")}`, 20);
+  doc.setFont("helvetica","normal"); doc.setFontSize(10.5); doc.setTextColor(90,58,34);
+  breakdown.forEach(b=>{
+    ensureSpace(15);
+    doc.text(`${b.recipe} · ${b.label}`, margin, y);
+    doc.text(formatAmount(b.weight,"g"), pageW - margin, y, { align:"right" });
+    y += 15;
+  });
+  const missing = recipes.filter(r=>getRecipeLeaven(r).total === 0).map(r=>r.title);
+  if(missing.length){
+    y += 4;
+    doc.setFont("helvetica","italic"); doc.setTextColor(140,110,80);
+    writeLines(`Geen desem gevonden in: ${missing.join(", ")}`, 14);
+  }
+}
+
+async function exportBakePDF(){
+  if(typeof window.jspdf === "undefined"){ showToast("PDF-maker niet beschikbaar in deze browser."); return; }
+  const recipes = getSelectedBreadRecipes();
+  if(recipes.length === 0){ showToast("Vink eerst minstens één recept aan."); return; }
+  showToast(`PDF wordt gemaakt van ${recipes.length} recept(en)…`);
   try{
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit:"pt", format:"a4" });
-    const pageW = doc.internal.pageSize.getWidth();
-    const pageH = doc.internal.pageSize.getHeight();
-    const margin = 42;
-    let y = margin;
-    function ensureSpace(h){ if(y + h > pageH - margin){ doc.addPage(); y = margin; } }
-    function writeLines(text, opts){
-      opts = opts || {};
-      const lines = doc.splitTextToSize(text, pageW - margin*2);
-      lines.forEach(line=>{ ensureSpace(opts.lineHeight||15); doc.text(line, margin, y); y += opts.lineHeight||15; });
-    }
-
-    doc.setFont("helvetica","bold"); doc.setFontSize(20); doc.setTextColor(30,20,10);
-    writeLines("Bakery planning", { lineHeight: 24 });
-    doc.setFont("helvetica","normal"); doc.setFontSize(10); doc.setTextColor(110,95,75);
-    writeLines(new Date().toLocaleDateString("nl-NL", { day:"numeric", month:"long", year:"numeric" }), { lineHeight: 16 });
-    y += 8;
-
-    selectedIds.forEach(id=>{
-      const r = findRecipe(id);
-      const sel = planningSelections[id];
-      const scale = getPlanningScale(r, sel);
-      doc.setDrawColor(210,190,150); ensureSpace(10); doc.line(margin, y, pageW-margin, y); y += 18;
-      doc.setFont("helvetica","bold"); doc.setFontSize(14); doc.setTextColor(30,20,10);
-      writeLines(`${r.title} — ${sel.loaves} × ${sel.weightPerLoaf} g`, { lineHeight: 18 });
-
-      getIngredientGroups(r).forEach(g=>{
-        doc.setFont("helvetica","bold"); doc.setFontSize(11); doc.setTextColor(74,46,28);
-        writeLines(g.name || "Ingrediënten", { lineHeight: 15 });
-        doc.setFont("helvetica","normal"); doc.setFontSize(10.5); doc.setTextColor(40,30,20);
-        (g.ingredients||[]).forEach(ing=>{
-          const amt = formatAmount(ing.g * scale, ing.unit);
-          writeLines(`•  ${ing.name} — ${amt}`, { lineHeight: 14 });
-        });
-        y += 4;
-      });
-      y += 6;
-    });
-
-    const { total, breakdown } = computeTotalLeaven();
-    doc.setDrawColor(210,190,150); ensureSpace(10); doc.line(margin, y, pageW-margin, y); y += 18;
-    doc.setFont("helvetica","bold"); doc.setFontSize(14); doc.setTextColor(30,20,10);
-    writeLines(`Totaal desem/levain aan te bouwen: ${formatAmount(total,"g")}`, { lineHeight: 18 });
-    doc.setFont("helvetica","normal"); doc.setFontSize(10); doc.setTextColor(90,58,34);
-    breakdown.forEach(b=> writeLines(`${b.recipe} — ${b.group}: ${formatAmount(b.weight,"g")}`, { lineHeight: 14 }));
-
+    writeBakeSummaryToPdf(doc, recipes);
+    recipes.forEach(r=>{ doc.addPage(); writeRecipeToPdf(doc, r); });
     const blob = doc.output("blob");
     const stamp = new Date().toISOString().slice(0,10);
-    await shareOrDownloadPdf(blob, `bakery-planning-${stamp}.pdf`, "Bakery planning");
+    await shareOrDownloadPdf(blob, `bakken-${stamp}.pdf`, "Bakken");
   }catch(err){
     console.error(err);
-    showToast("Kon geen planning-PDF maken.");
+    showToast("Kon geen PDF maken.");
   }
 }
 
@@ -4005,6 +4061,7 @@ function exportData(){
     listIds: state.listIds,
     photos: state.photos,
     attachments: state.attachments,
+    breadOrder: state.breadOrder,
   };
   const blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"});
   const url = URL.createObjectURL(blob);
@@ -4037,6 +4094,7 @@ async function importData(file){
     state.scales = parsed.scales || {};
     state.listIds = parsed.listIds || [];
     state.ingredientPrices = parsed.ingredientPrices || {};
+    if(parsed.breadOrder) state.breadOrder = parsed.breadOrder;
     state.selectedId = state.recipes[0]?.id || null;
 
     // Older backups store photos/attachments as base64 text. Migrate those
@@ -4099,11 +4157,13 @@ document.getElementById("navInspirationBtn").addEventListener("click", ()=>{
   const isShowing = !document.getElementById("viewInspiration").classList.contains("hidden");
   showInspirationView(!isShowing);
 });
-document.getElementById("navPlanningBtn").addEventListener("click", ()=>{
-  const isShowing = !document.getElementById("viewPlanning").classList.contains("hidden");
-  showPlanningView(!isShowing);
+document.getElementById("navBakeBtn").addEventListener("click", ()=>{
+  const isShowing = !document.getElementById("viewBake").classList.contains("hidden");
+  showBakeView(!isShowing);
 });
-document.getElementById("exportPlanningBtn").addEventListener("click", exportPlanningPDF);
+document.getElementById("exportBakeBtn").addEventListener("click", exportBakePDF);
+document.getElementById("bakeSelectNone").addEventListener("click", ()=>{ bakeSelection.clear(); renderBake(); });
+enableBakeSortable(document.getElementById("bakeList"), ".bake-row", setBreadOrder);
 document.getElementById("addPinBtn").addEventListener("click", openPinModal);
 document.getElementById("pinClose").addEventListener("click", closePinModal);
 document.getElementById("pinCancel").addEventListener("click", closePinModal);
