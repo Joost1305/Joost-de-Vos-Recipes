@@ -210,28 +210,15 @@
   .stepper button{width:28px;height:28px;border-radius:999px;display:grid;place-items:center;}
   .stepper button:hover{background:rgba(255,255,255,.7);}
 
-  .timers-section{margin-bottom:16px;}
   .timers-label{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--muted2);text-transform:uppercase;letter-spacing:.03em;margin-bottom:8px;}
   .timers-toggle{width:100%;justify-content:space-between;background:none;border:none;padding:0;cursor:pointer;}
   .timers-toggle span:first-child{display:flex;align-items:center;gap:6px;}
   .timers-chevron{display:flex;transition:transform .15s;color:var(--muted);}
   .timers-chevron.open{transform:rotate(180deg);}
   .timers-collapsible.hidden{display:none;}
-  .timers-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-  @media(max-width:480px){ .timers-grid{grid-template-columns:1fr;} }
-  .timer-card{background:var(--extras-bg);border:1px solid var(--border2);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;}
-  .timer-card.running{border-color:var(--crust);box-shadow:0 0 0 1px var(--crust);}
-  .timer-card.done{border-color:#B5442E;background:#FBEAE4;}
-  .timer-label{border:none;background:transparent;font-family:'Fraunces',serif;font-weight:600;font-size:13.5px;color:var(--ink);padding:0;width:100%;}
   .timer-display{font-size:26px;font-weight:600;color:var(--ink);letter-spacing:.02em;}
-  .timer-card.done .timer-display{color:#B5442E;}
   .timer-controls{display:flex;align-items:center;gap:6px;}
-  .timer-minutes{width:48px;padding:5px 6px;border:1px solid var(--border2);border-radius:7px;background:#fff;color:var(--ink);font-size:12.5px;font-family:'JetBrains Mono',monospace;}
   .timer-min-label{font-size:11.5px;color:var(--muted);margin-right:auto;}
-  .timer-toggle{font-size:12px;font-weight:600;padding:6px 12px;border-radius:999px;background:var(--crust);color:var(--rye);}
-  .timer-card.running .timer-toggle{background:var(--rye);color:var(--bg);}
-  .timer-reset{width:26px;height:26px;border-radius:999px;display:grid;place-items:center;color:var(--muted2);border:1px solid var(--border2);flex-shrink:0;}
-  .timer-reset:hover{color:#B5442E;border-color:#B5442E;}
   .general-timer-wrap{width:100%;}
   .general-timer-card{background:var(--extras-bg);border:1px solid var(--border2);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:8px;text-align:left;}
   .general-timer-card.running{border-color:var(--crust);box-shadow:0 0 0 1px var(--crust);}
@@ -849,21 +836,6 @@ function findRecipe(id){ return state.recipes.find(x=>x.id===id); }
 // for Brood recipes styled as separate levain/deeg tables). This normalizes
 // both into a uniform list of groups so most code doesn't need to care which
 // shape a given recipe uses.
-// --- Recipe timers: 2 per recipe (e.g. Bulkrijs / Vouwen), countdown runs in
-// the background so it survives re-renders of the same recipe (scale change
-// etc.) — only resets if you navigate away or refresh the page. ---
-const activeTimers = {};
-function timerKey(recipeId, idx){ return `${recipeId}_${idx}`; }
-function getTimerDefs(r){
-  return (r.timers && r.timers.length === 2) ? r.timers : [{label:"Bulkrijs", minutes:90}, {label:"Vouwen", minutes:30}];
-}
-function ensureTimerState(recipeId, idx, minutes){
-  const key = timerKey(recipeId, idx);
-  if(!activeTimers[key]){
-    activeTimers[key] = { remainingSec: minutes*60, running:false, intervalId:null, alarmIntervalId:null, totalSec: minutes*60 };
-  }
-  return activeTimers[key];
-}
 function formatTimerDisplay(sec){
   sec = Math.max(0, Math.round(sec));
   const m = Math.floor(sec/60), s = sec%60;
@@ -897,43 +869,6 @@ function stopAlarmLoop(t){
     t.alarmIntervalId = null;
   }
 }
-function startTimer(recipeId, idx, minutes){
-  const t = ensureTimerState(recipeId, idx, minutes);
-  if(t.running) return;
-  stopAlarmLoop(t);
-  if(t.remainingSec <= 0) t.remainingSec = t.totalSec;
-  t.running = true;
-  t.intervalId = setInterval(()=>{
-    t.remainingSec -= 1;
-    const displayEl = document.querySelector(`.timer-card[data-idx="${idx}"] .timer-display`);
-    if(displayEl) displayEl.textContent = formatTimerDisplay(t.remainingSec);
-    if(t.remainingSec <= 0){
-      clearInterval(t.intervalId);
-      t.running = false;
-      t.remainingSec = 0;
-      const recipe = findRecipe(recipeId);
-      const label = getTimerDefs(recipe||{})[idx]?.label || "Timer";
-      const titleTxt = recipe ? ` — "${recipe.title}"` : "";
-      showToast(`⏰ Timer ${label}${titleTxt} klaar!`);
-      startAlarmLoop(t);
-      if(state.selectedId === recipeId) renderDetail();
-    }
-  }, 1000);
-}
-function pauseTimer(recipeId, idx){
-  const t = activeTimers[timerKey(recipeId, idx)];
-  if(!t) return;
-  clearInterval(t.intervalId);
-  t.running = false;
-  stopAlarmLoop(t);
-}
-function resetTimer(recipeId, idx, minutes){
-  const key = timerKey(recipeId, idx);
-  const t = activeTimers[key];
-  if(t){ clearInterval(t.intervalId); stopAlarmLoop(t); }
-  activeTimers[key] = { remainingSec: minutes*60, running:false, intervalId:null, alarmIntervalId:null, totalSec: minutes*60 };
-}
-
 // --- General kitchen timer on the landing page (not tied to a recipe) ---
 let generalTimerState = { remainingSec: 600, running:false, intervalId:null, alarmIntervalId:null, totalSec: 600 };
 let generalTimerCollapsed = true;
@@ -1013,82 +948,6 @@ function wireGeneralTimer(){
     const minutes = Math.max(1, parseInt(minutesInput.value,10) || 10);
     generalTimerState = { remainingSec: minutes*60, running:false, intervalId:null, alarmIntervalId:null, totalSec: minutes*60 };
     renderSidebar();
-  });
-}
-
-let recipeTimersCollapsed = true;
-function renderTimersHTML(r){
-  const defs = getTimerDefs(r);
-  const states = defs.map((t,idx)=>ensureTimerState(r.id, idx, t.minutes));
-  const anyRunning = states.some(st=>st.running);
-  const open = !recipeTimersCollapsed || anyRunning;
-  return `<div class="timers-section">
-    <button type="button" class="timers-label timers-toggle" id="recipeTimersCollapseToggle">
-      <span>${ICONS.clock} Timers</span>
-      <span class="timers-chevron ${open?'open':''}">${ICONS.chevronDown}</span>
-    </button>
-    <div class="timers-grid timers-collapsible ${open?'':'hidden'}">
-      ${defs.map((t,idx)=>{
-        const st = states[idx];
-        const done = st.remainingSec <= 0 && !st.running;
-        return `<div class="timer-card ${st.running?'running':''} ${done?'done':''}" data-idx="${idx}">
-          <input type="text" class="timer-label" data-idx="${idx}" value="${(t.label||"").replace(/"/g,"&quot;")}" placeholder="Timernaam">
-          <div class="timer-display font-mono">${formatTimerDisplay(st.remainingSec)}</div>
-          <div class="timer-controls">
-            <input type="number" class="timer-minutes" data-idx="${idx}" min="1" step="1" value="${t.minutes}" ${st.running?'disabled':''}>
-            <span class="timer-min-label">min</span>
-            <button type="button" class="timer-toggle" data-idx="${idx}">${st.running ? 'Pauze' : (st.remainingSec<=0 ? 'Herstart' : (st.remainingSec<st.totalSec ? 'Hervat' : 'Start'))}</button>
-            <button type="button" class="timer-reset" data-idx="${idx}" title="Reset">${ICONS.x}</button>
-          </div>
-        </div>`;
-      }).join("")}
-    </div>
-  </div>`;
-}
-
-function saveTimerDefs(r, defs){
-  const idx = state.recipes.findIndex(x=>x.id===r.id);
-  if(idx > -1){ state.recipes[idx].timers = defs; saveState(); }
-}
-
-function wireTimers(r){
-  const collapseToggle = document.getElementById("recipeTimersCollapseToggle");
-  if(collapseToggle) collapseToggle.addEventListener("click", ()=>{
-    recipeTimersCollapsed = !recipeTimersCollapsed;
-    renderDetail();
-  });
-  const defs = getTimerDefs(r);
-  document.querySelectorAll(".timer-toggle").forEach(btn=>{
-    btn.addEventListener("click", ()=>{
-      const idx = +btn.dataset.idx;
-      const t = ensureTimerState(r.id, idx, defs[idx].minutes);
-      if(t.running) pauseTimer(r.id, idx); else startTimer(r.id, idx, defs[idx].minutes);
-      renderDetail();
-    });
-  });
-  document.querySelectorAll(".timer-reset").forEach(btn=>{
-    btn.addEventListener("click", ()=>{
-      const idx = +btn.dataset.idx;
-      resetTimer(r.id, idx, defs[idx].minutes);
-      renderDetail();
-    });
-  });
-  document.querySelectorAll(".timer-label").forEach(input=>{
-    input.addEventListener("change", ()=>{
-      const idx = +input.dataset.idx;
-      const newDefs = getTimerDefs(r).map((t,i)=> i===idx ? {...t, label: input.value.trim() || `Timer ${i+1}`} : t);
-      saveTimerDefs(r, newDefs);
-    });
-  });
-  document.querySelectorAll(".timer-minutes").forEach(input=>{
-    input.addEventListener("change", ()=>{
-      const idx = +input.dataset.idx;
-      const minutes = Math.max(1, parseInt(input.value,10) || 1);
-      const newDefs = getTimerDefs(r).map((t,i)=> i===idx ? {...t, minutes} : t);
-      saveTimerDefs(r, newDefs);
-      resetTimer(r.id, idx, minutes);
-      renderDetail();
-    });
   });
 }
 
@@ -1661,7 +1520,6 @@ function renderDetail(){
         </div>
       </div>
 
-      ${r.category === "Brood" ? renderTimersHTML(r) : ""}
 
       ${(()=>{
         const hasGroups = r.doughGroups && r.doughGroups.length > 1;
@@ -1776,7 +1634,6 @@ function renderDetail(){
     if(path) deleteFromStorage(path);
     renderDetail();
   });
-  if(r.category === "Brood") wireTimers(r);
   wirePrepChecks(r.id);
   const wtCalcBtn = document.getElementById("goToWaterCalc");
   if(wtCalcBtn) wtCalcBtn.addEventListener("click", goToWaterCalculator);
