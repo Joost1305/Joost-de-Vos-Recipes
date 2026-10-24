@@ -187,6 +187,14 @@
   .photo-wrap{position:relative;height:190px;background:var(--photo-bg);}
   .photo-wrap img{width:100%;height:100%;object-fit:cover;}
   .photo-empty{width:100%;height:100%;display:grid;place-items:center;}
+  .gallery-section{margin-top:28px;}
+  .gallery-head{display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:600;color:var(--muted2);text-transform:uppercase;letter-spacing:.03em;margin-bottom:10px;}
+  .gallery-actions{display:flex;gap:8px;}
+  .gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;}
+  .gallery-item{position:relative;aspect-ratio:1/1;border-radius:12px;overflow:hidden;background:var(--photo-bg);}
+  .gallery-item img{width:100%;height:100%;object-fit:cover;display:block;}
+  .gallery-del{position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:999px;border:none;background:rgba(255,255,255,.9);color:var(--ink);display:grid;place-items:center;cursor:pointer;}
+  .gallery-empty{font-size:13px;color:var(--muted);}
   .photo-actions{position:absolute;bottom:12px;right:12px;display:flex;gap:8px;}
   .icon-btn{background:rgba(255,255,255,.92);border-radius:999px;padding:8px;box-shadow:0 1px 4px rgba(0,0,0,.15);display:grid;place-items:center;}
   .icon-btn:hover{background:#fff;}
@@ -785,6 +793,8 @@
 
 <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none">
 <input type="file" id="fileInput" accept="image/*" style="display:none">
+<input type="file" id="galleryInput" accept="image/*" multiple style="display:none">
+<input type="file" id="galleryCameraInput" accept="image/*" capture="environment" style="display:none">
 <input type="file" id="attachmentInput" accept=".pdf,application/pdf" style="display:none">
 <input type="file" id="pinFileInput" accept="image/*" style="display:none">
 <input type="file" id="pinCameraInput" accept="image/*" capture="environment" style="display:none">
@@ -826,7 +836,7 @@ const SCHEMA = [
 // ---------------------------------------------------------------------------
 // State + persistence (localStorage — this file runs standalone, no server)
 // ---------------------------------------------------------------------------
-let state = { breadOrder:[], scales:{}, listIds:[], photos:{}, attachments:{}, ingredientPrices:{}, priceAliases:{}, inspirations:[], useLargeUnits:false, recipes:[], selectedId:null, activeCategory:"__all__", searchQuery:"", mobileView:"list" };
+let state = { breadOrder:[], scales:{}, listIds:[], photos:{}, gallery:{}, attachments:{}, ingredientPrices:{}, priceAliases:{}, inspirations:[], useLargeUnits:false, recipes:[], selectedId:null, activeCategory:"__all__", searchQuery:"", mobileView:"list" };
 
 function newId(){ return "r" + Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
 function findRecipe(id){ return state.recipes.find(x=>x.id===id); }
@@ -841,9 +851,18 @@ function formatTimerDisplay(sec){
   const m = Math.floor(sec/60), s = sec%60;
   return `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
 }
+let sharedAudioCtx = null;
+function getAudioCtx(){
+  try{
+    if(!sharedAudioCtx) sharedAudioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    if(sharedAudioCtx.state === "suspended") sharedAudioCtx.resume();
+  }catch(e){ sharedAudioCtx = null; }
+  return sharedAudioCtx;
+}
 function playTimerBeep(){
   try{
-    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    const ctx = getAudioCtx();
+    if(!ctx) return;
     [0, 0.35, 0.7].forEach(delay=>{
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
@@ -856,7 +875,7 @@ function playTimerBeep(){
       osc.start(ctx.currentTime + delay);
       osc.stop(ctx.currentTime + delay + 0.32);
     });
-  }catch(e){ /* audio not available — visual/toast alert still happens */ }
+  }catch(e){ /* audio not available, visual/toast alert still happens */ }
 }
 function startAlarmLoop(t){
   stopAlarmLoop(t);
@@ -892,26 +911,42 @@ function renderGeneralTimerHTML(){
     </div>
   </div>`;
 }
+// The countdown is based on an end timestamp, not on counting ticks. Browsers
+// slow down or freeze timers in background tabs, so after switching tabs the
+// remaining time is recalculated from the clock and the timer stays correct.
+const baseTitle = document.title;
+function tickGeneralTimer(){
+  const st = generalTimerState;
+  if(!st.running) return;
+  st.remainingSec = Math.max(0, Math.ceil((st.endAt - Date.now())/1000));
+  const displayEl = document.querySelector(".general-timer-card .timer-display");
+  if(displayEl) displayEl.textContent = formatTimerDisplay(st.remainingSec);
+  if(st.remainingSec <= 0){
+    clearInterval(st.intervalId);
+    st.running = false;
+    st.remainingSec = 0;
+    showToast("⏰ Kookwekker klaar!");
+    startAlarmLoop(st);
+    if(document.hidden) document.title = "⏰ Kookwekker klaar!";
+    renderSidebar();
+  }
+}
 function startGeneralTimer(minutes){
   const st = generalTimerState;
   if(st.running) return;
   stopAlarmLoop(st);
   if(st.remainingSec <= 0) st.remainingSec = st.totalSec;
   st.running = true;
-  st.intervalId = setInterval(()=>{
-    st.remainingSec -= 1;
-    const displayEl = document.querySelector(".general-timer-card .timer-display");
-    if(displayEl) displayEl.textContent = formatTimerDisplay(st.remainingSec);
-    if(st.remainingSec <= 0){
-      clearInterval(st.intervalId);
-      st.running = false;
-      st.remainingSec = 0;
-      showToast("⏰ Kookwekker klaar!");
-      startAlarmLoop(st);
-      renderSidebar();
-    }
-  }, 1000);
+  st.endAt = Date.now() + st.remainingSec*1000;
+  getAudioCtx(); // unlock audio on this user tap so the alarm can sound later
+  st.intervalId = setInterval(tickGeneralTimer, 500);
 }
+document.addEventListener("visibilitychange", ()=>{
+  if(!document.hidden){
+    document.title = baseTitle;
+    tickGeneralTimer();
+  }
+});
 function wireGeneralTimer(){
   const collapseToggle = document.getElementById("genTimerCollapseToggle");
   if(collapseToggle) collapseToggle.addEventListener("click", ()=>{
@@ -924,6 +959,7 @@ function wireGeneralTimer(){
   if(!toggle) return;
   toggle.addEventListener("click", ()=>{
     if(generalTimerState.running){
+      generalTimerState.remainingSec = Math.max(0, Math.ceil((generalTimerState.endAt - Date.now())/1000));
       clearInterval(generalTimerState.intervalId);
       generalTimerState.running = false;
       stopAlarmLoop(generalTimerState);
@@ -1068,6 +1104,7 @@ function applyStateData(parsed){
   state.scales = parsed.scales || {};
   state.listIds = parsed.listIds || [];
   state.photos = parsed.photos || {};
+  state.gallery = parsed.gallery || {};
   state.attachments = parsed.attachments || {};
   state.ingredientPrices = parsed.ingredientPrices || {};
   state.inspirations = parsed.inspirations || [];
@@ -1141,7 +1178,7 @@ async function saveState(){
   try{
     applyingRemoteUpdate = true;
     const payload = {
-      scales: state.scales, listIds: state.listIds, photos: state.photos,
+      scales: state.scales, listIds: state.listIds, photos: state.photos, gallery: state.gallery,
       attachments: state.attachments, ingredientPrices: state.ingredientPrices,
       inspirations: state.inspirations, priceAliases: state.priceAliases, werkschema: state.werkschema,
       recipes: state.recipes, useLargeUnits: state.useLargeUnits, breadOrder: state.breadOrder,
@@ -1591,10 +1628,12 @@ function renderDetail(){
           }).join("")}
         </div>`;
       })()}
+      ${renderGalleryHTML(r)}
     </div>
   `;
 
   document.getElementById("mobileBackBtn").addEventListener("click", goToMobileList);
+  wireGallery(r);
   const uploadBtn = document.getElementById("uploadPhoto");
   if(uploadBtn) uploadBtn.addEventListener("click", ()=>{
     const input = document.getElementById("fileInput");
@@ -2875,15 +2914,18 @@ function deleteRecipeConfirm(){
   if(!confirm(`"${r.title}" verwijderen? Dit kan niet ongedaan worden gemaakt.`)) return;
   const photoPath = storagePathFromUrl(state.photos[editingId]);
   const attPath = storagePathFromUrl(state.attachments[editingId]?.url);
+  const galleryPaths = (state.gallery[editingId] || []).map(storagePathFromUrl).filter(Boolean);
   state.recipes = state.recipes.filter(x=>x.id!==editingId);
   delete state.scales[editingId];
   delete state.photos[editingId];
+  delete state.gallery[editingId];
   delete state.attachments[editingId];
   state.listIds = state.listIds.filter(x=>x!==editingId);
   if(state.selectedId===editingId) state.selectedId = state.recipes[0]?.id || null;
   saveState();
   if(photoPath) deleteFromStorage(photoPath);
   if(attPath) deleteFromStorage(attPath);
+  galleryPaths.forEach(deleteFromStorage);
   closeEditor();
   renderSidebar();
   renderDetail();
@@ -2962,6 +3004,68 @@ document.getElementById("printBtn").addEventListener("click", openPrintSheet);
 document.getElementById("closePrint").addEventListener("click", ()=>{
   document.getElementById("printSheet").classList.remove("show");
 });
+function renderGalleryHTML(r){
+  const list = state.gallery[r.id] || [];
+  return `<div class="gallery-section">
+    <div class="gallery-head">
+      <span>Foto's</span>
+      <div class="gallery-actions">
+        <button class="icon-btn-outline" id="galleryUpload" title="Foto's toevoegen">${ICONS.upload}</button>
+        <button class="icon-btn-outline" id="galleryCamera" title="Foto maken">${ICONS.camera}</button>
+      </div>
+    </div>
+    ${list.length ? `<div class="gallery-grid">${list.map((u,i)=>`
+      <div class="gallery-item">
+        <a href="${u}" target="_blank" rel="noopener"><img src="${u}" loading="lazy"></a>
+        <button class="gallery-del" data-i="${i}" title="Foto verwijderen">${ICONS.x}</button>
+      </div>`).join("")}</div>` : `<div class="gallery-empty">Nog geen extra foto's, bijvoorbeeld van de bereiding.</div>`}
+  </div>`;
+}
+function wireGallery(r){
+  const up = document.getElementById("galleryUpload");
+  if(up) up.addEventListener("click", ()=>{
+    const input = document.getElementById("galleryInput");
+    input.dataset.forId = r.id; input.click();
+  });
+  const cam = document.getElementById("galleryCamera");
+  if(cam) cam.addEventListener("click", ()=>{
+    const input = document.getElementById("galleryCameraInput");
+    input.dataset.forId = r.id; input.click();
+  });
+  document.querySelectorAll(".gallery-del").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      if(!confirm("Deze foto verwijderen?")) return;
+      const list = state.gallery[r.id] || [];
+      const [removed] = list.splice(+btn.dataset.i, 1);
+      if(!list.length) delete state.gallery[r.id];
+      saveState();
+      if(removed) deleteFromStorage(storagePathFromUrl(removed));
+      renderDetail();
+    });
+  });
+}
+async function handleGalleryInput(e){
+  const files = Array.from(e.target.files || []);
+  const id = e.target.dataset.forId;
+  e.target.value = "";
+  if(!files.length || !id) return;
+  showToast(files.length > 1 ? `${files.length} foto's worden geüpload…` : "Foto wordt geüpload…");
+  let failed = 0;
+  for(const file of files){
+    try{
+      const blob = await resizeImage(file);
+      const path = `gallery/${id}-${Date.now()}-${Math.random().toString(36).slice(2,7)}.jpg`;
+      const url = await uploadToStorage(path, blob, "image/jpeg");
+      (state.gallery[id] = state.gallery[id] || []).push(url);
+    }catch(err){ console.error(err); failed++; }
+  }
+  await saveState();
+  renderDetail();
+  showToast(failed ? `${failed} foto('s) konden niet worden geüpload.` : "Foto toegevoegd.");
+}
+document.getElementById("galleryInput").addEventListener("change", handleGalleryInput);
+document.getElementById("galleryCameraInput").addEventListener("change", handleGalleryInput);
+
 async function handlePhotoInput(e){
   const file = e.target.files && e.target.files[0];
   const id = e.target.dataset.forId;
@@ -3917,6 +4021,7 @@ function exportData(){
     scales: state.scales,
     listIds: state.listIds,
     photos: state.photos,
+    gallery: state.gallery,
     attachments: state.attachments,
     breadOrder: state.breadOrder,
   };
@@ -3982,6 +4087,7 @@ async function importData(file){
         state.photos[id] = val; // already a URL
       }
     }
+    state.gallery = parsed.gallery || {};
     state.attachments = {};
     for(const [id, val] of Object.entries(oldAttachments)){
       if(val && val.data){
