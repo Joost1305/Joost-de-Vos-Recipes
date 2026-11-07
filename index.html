@@ -650,6 +650,25 @@
   .hero-head{padding-right:68px;}
   .photo-wrap .photo-empty{display:grid;place-items:center;}
   .photo-wrap .fox-empty{width:120px;height:120px;max-width:120px;border-radius:50%;object-fit:cover;background:#fff;opacity:.95;box-shadow:0 2px 12px rgba(44,58,45,.12);}
+
+  /* round 3: readability + home */
+  .solid-btn{background:var(--crust);color:#fff;border-radius:12px;padding:10px 16px;font-size:13.5px;font-weight:600;white-space:nowrap;}
+  .solid-btn:active{transform:scale(.98);}
+  .list-label{font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted2);margin:6px 2px 8px;}
+  .rcard-sub{font-size:13px;color:var(--muted2);}
+  .rlist.grid .rcard-sub{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.3;}
+  .hero{padding:14px 16px;gap:10px;border-radius:20px;}
+  .hero-greet{font-size:21px;}
+  .hero-date{font-size:12.5px;margin-top:1px;}
+  .hero-fox{width:44px;height:44px;top:12px;right:14px;}
+  .hero-head{padding-right:56px;}
+  .hero .general-timer-card{padding:9px 12px;}
+  @media (max-width:760px){
+    #sidebar > .category-tabbar{padding:2px 0 12px;margin:0 -14px;}
+    #sidebar > .category-tabbar::after{width:44px;background:linear-gradient(to left,var(--bg) 30%,transparent);}
+    #sidebar > .category-tabbar .category-tabs{padding:0 14px;}
+    #sidebar > .category-tabbar::after{content:"›";display:flex;align-items:center;justify-content:flex-end;padding-right:8px;color:var(--muted2);font-size:20px;}
+  }
 </style>
 </head>
 <body>
@@ -699,7 +718,7 @@
   <div id="viewBake" class="hidden">
     <div class="inspiration-head">
       <h2 class="font-display">Bakschema</h2>
-      <button class="new-recipe-btn" id="exportBakeBtn">PDF van selectie</button>
+      <button class="solid-btn" id="exportBakeBtn">PDF van selectie</button>
     </div>
     <p class="bake-intro">Vink de broden aan die je gaat bakken. Sleep aan het handvat om de volgorde aan te passen; die volgorde wordt bewaard en ook gebruikt in de Brood-lijst.</p>
     <div class="bake-actions">
@@ -1533,10 +1552,10 @@ function openMoreSheet(){
     { id:"new", items:[
       { icon:ic("plus"), label:"Nieuw recept", fn:()=>openEditor(null) },
     ]},
-    { id:"sch", heading:"Schema's", items:[
-      { icon:ic("list"), label:"Bakschema (broden kiezen en volgorde)", fn:()=>showBakeView(true) },
-      { icon:ic("clock"), label:"Bakkersschema (werkwijze en watertemperatuur)", fn:()=>openBakkersschemaPage() },
-      { icon:ic("book"), label:"Werkschema (dag 1 tot 3)", fn:()=>openWerkschemaModal() },
+    { id:"sch", heading:"Bakschema's", items:[
+      { icon:ic("list"), label:"Broden kiezen en volgorde", fn:()=>showBakeView(true) },
+      { icon:ic("clock"), label:"Watertemperatuur en werkwijze", fn:()=>openBakkersschemaPage() },
+      { icon:ic("book"), label:"Werkschema dag 1 tot 3", fn:()=>openWerkschemaModal() },
     ]},
     { id:"imp", heading:"Recepten importeren", items:[
       { icon:ic("fileDoc"), label:"Word-document(en)", fn:()=>document.getElementById("docxInput").click() },
@@ -1663,7 +1682,25 @@ function renderHeroHTML(){
     <div class="general-timer-wrap">${renderGeneralTimerHTML()}</div>
   </div>`;
 }
+const RECENT_KEY = "bakboek_recent";
+function getRecentIds(){
+  try{ const a = JSON.parse(localStorage.getItem(RECENT_KEY)||"[]"); return Array.isArray(a)?a:[]; }catch(e){ return []; }
+}
+function pushRecent(id){
+  if(!id || id === "__schema__") return;
+  try{
+    const a = getRecentIds().filter(x=>x!==id); a.unshift(id);
+    localStorage.setItem(RECENT_KEY, JSON.stringify(a.slice(0,12)));
+  }catch(e){}
+}
+function homeCategoryBar(){
+  // on phones the category chips live under the search field
+  const bar = document.getElementById("categoryTabbar");
+  const header = document.querySelector("header .header-inner");
+  if(bar && header && bar.parentElement.id === "sidebar"){ document.querySelector("header").appendChild(bar); }
+}
 function renderSidebar(){
+  homeCategoryBar();
   const el = document.getElementById("sidebar");
   const visible = getVisibleRecipes();
   const searching = !!(state.searchQuery||"").trim();
@@ -1686,11 +1723,7 @@ function renderSidebar(){
   const breadInfo = (state.activeCategory === "Brood" && !searching)
     ? `<button class="info-chip" id="bakInfoBtn">${ICONS.book}<span>Bakkersinformatie</span><span class="info-chip-arrow">›</span></button>`
     : "";
-  el.innerHTML = ((searching || state.activeCategory !== "__all__") ? "" : renderHeroHTML())
-    + searchBar
-    + breadInfo
-    + emptyMsg
-    + `<div class="rlist ${gridOn ? "grid" : ""}">` + visible.map(r=>{
+  const cardHTML = (r)=>{
     const photo = state.photos[r.id];
     const thumb = photo ? `<img class="rcard-thumb" src="${photo}" loading="lazy">` : `<div class="rcard-badge">${loafBadgeSVG()}</div>`;
     const check = state.listIds.includes(r.id) ? `<div class="rcard-check">${ICONS.check}</div>` : "";
@@ -1704,7 +1737,26 @@ function renderSidebar(){
         ${check}
       </div>
     </button>`;
-  }).join("") + `</div>`;
+  };
+  const showRecent = !searching && state.activeCategory === "__all__";
+  const recentIds = showRecent ? getRecentIds() : [];
+  const recentRecipes = recentIds.map(id=>visible.find(r=>r.id===id)).filter(Boolean).slice(0,6);
+  const restRecipes = recentRecipes.length ? visible.filter(r=>!recentRecipes.includes(r)) : visible;
+  const rl = `rlist ${gridOn ? "grid" : ""}`;
+  const listHTML = (recentRecipes.length
+      ? `<div class="list-label">Laatst gebruikt</div><div class="${rl}">${recentRecipes.map(cardHTML).join("")}</div><div class="list-label">Alle recepten</div>`
+      : "")
+    + `<div class="${rl}">${restRecipes.map(cardHTML).join("")}</div>`;
+  el.innerHTML = ((searching || state.activeCategory !== "__all__") ? "" : renderHeroHTML())
+    + searchBar
+    + breadInfo
+    + emptyMsg
+    + listHTML;
+  if(window.matchMedia("(max-width:760px)").matches){
+    const bar = document.getElementById("categoryTabbar");
+    const row = el.querySelector(".search-row");
+    if(bar && row){ row.insertAdjacentElement("afterend", bar); }
+  }
   wireGeneralTimer();
   el.querySelectorAll(".rcard").forEach(btn=>{
     btn.addEventListener("click", ()=>{
@@ -1762,6 +1814,7 @@ function updateMobileViewClass(){
   if(typeof updateBottomBars === "function") updateBottomBars();
 }
 function renderDetail(){
+  if(state.mobileView === "detail" || window.innerWidth > 760) pushRecent(state.selectedId);
   renderDetailInner();
   updateBottomBars();
 }
