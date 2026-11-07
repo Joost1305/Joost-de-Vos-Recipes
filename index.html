@@ -669,6 +669,22 @@
     #sidebar > .category-tabbar .category-tabs{padding:0 14px;}
     #sidebar > .category-tabbar::after{content:"›";display:flex;align-items:center;justify-content:flex-end;padding-right:8px;color:var(--muted2);font-size:20px;}
   }
+
+  /* compact hero: greeting + alarm button in one row */
+  .hero{padding:12px 14px;gap:0;}
+  .hero-row{display:flex;align-items:center;justify-content:space-between;gap:10px;position:relative;z-index:1;}
+  .hero-head{padding-right:0;min-width:0;}
+  .hero-greet{font-size:19px;}
+  .hero-alarm{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);color:#f1f4ea;border-radius:999px;padding:8px 12px;flex-shrink:0;}
+  .hero-alarm .alarm-emoji{font-size:20px;line-height:1;}
+  .hero-alarm .alarm-time{font-size:14px;font-weight:500;}
+  .hero-alarm.running{border-color:var(--crust-h);background:rgba(138,79,148,.35);}
+  .hero-alarm.done{background:rgba(181,68,46,.45);border-color:#E08A76;}
+  .hero .general-timer-wrap:empty{display:none;}
+  .hero .general-timer-card{background:none;border:none;padding:0;}
+  .hero .general-timer-card.is-open{margin-top:10px;padding:10px 12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);}
+  .hero .general-timer-card:not(.is-open){display:none;}
+  .hero::after{display:none;}
 </style>
 </head>
 <body>
@@ -1065,15 +1081,19 @@ function stopAlarmLoop(t){
 // --- General kitchen timer on the landing page (not tied to a recipe) ---
 let generalTimerState = { remainingSec: 600, running:false, intervalId:null, alarmIntervalId:null, totalSec: 600 };
 let generalTimerCollapsed = true;
+function renderAlarmBtnHTML(){
+  const st = generalTimerState;
+  const done = st.remainingSec <= 0 && !st.running;
+  const showTime = (st.running || done || st.remainingSec !== st.totalSec);
+  return `<button type="button" class="hero-alarm ${st.running?'running':''} ${done?'done':''}" id="genTimerCollapseToggle" aria-label="Kookwekker">
+    <span class="alarm-emoji">⏰</span>${showTime ? `<span class="alarm-time font-mono">${formatTimerDisplay(st.remainingSec)}</span>` : ""}
+  </button>`;
+}
 function renderGeneralTimerHTML(){
   const st = generalTimerState;
   const done = st.remainingSec <= 0 && !st.running;
-  const open = !generalTimerCollapsed || st.running;
-  return `<div class="general-timer-card ${st.running?'running':''} ${done?'done':''}">
-    <button type="button" class="timers-label timers-toggle" id="genTimerCollapseToggle">
-      <span>${ICONS.clock} Kookwekker${!open && st.remainingSec !== st.totalSec ? ` — ${formatTimerDisplay(st.remainingSec)}` : ""}</span>
-      <span class="timers-chevron ${open?'open':''}">${ICONS.chevronDown}</span>
-    </button>
+  const open = !generalTimerCollapsed || done;
+  return `<div class="general-timer-card ${st.running?'running':''} ${done?'done':''} ${open?'is-open':''}">
     <div class="timers-collapsible ${open?'':'hidden'}">
       <div class="timer-display font-mono">${formatTimerDisplay(st.remainingSec)}</div>
       <div class="timer-controls">
@@ -1095,6 +1115,8 @@ function tickGeneralTimer(){
   st.remainingSec = Math.max(0, Math.ceil((st.endAt - Date.now())/1000));
   const displayEl = document.querySelector(".general-timer-card .timer-display");
   if(displayEl) displayEl.textContent = formatTimerDisplay(st.remainingSec);
+  const alarmTime = document.querySelector("#genTimerCollapseToggle .alarm-time");
+  if(alarmTime) alarmTime.textContent = formatTimerDisplay(st.remainingSec);
   if(st.remainingSec <= 0){
     clearInterval(st.intervalId);
     st.running = false;
@@ -1680,10 +1702,12 @@ function greetingText(){
 function renderHeroHTML(){
   const date = new Date().toLocaleDateString("nl-NL", { weekday:"long", day:"numeric", month:"long", year:"numeric" });
   return `<div class="hero">
-    <img class="hero-fox" src="${FOX_SRC}" alt="">
-    <div class="hero-head">
-      <h2 class="hero-greet font-display">${greetingText()}</h2>
-      <div class="hero-date">${date}</div>
+    <div class="hero-row">
+      <div class="hero-head">
+        <h2 class="hero-greet font-display">${greetingText()}</h2>
+        <div class="hero-date">${date}</div>
+      </div>
+      ${renderAlarmBtnHTML()}
     </div>
     <div class="general-timer-wrap">${renderGeneralTimerHTML()}</div>
   </div>`;
