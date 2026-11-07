@@ -1551,6 +1551,7 @@ function openMoreSheet(){
   openSheet("Meer", [
     { id:"new", items:[
       { icon:ic("plus"), label:"Nieuw recept", fn:()=>openEditor(null) },
+      { icon:listViewMode === "grid" ? TAB_ICONS.list : TAB_ICONS.grid, label:listViewMode === "grid" ? "Toon recepten als lijst" : "Toon recepten als raster", fn:()=>toggleListView() },
     ]},
     { id:"sch", heading:"Bakschema's", items:[
       { icon:ic("list"), label:"Broden kiezen en volgorde", fn:()=>showBakeView(true) },
@@ -1584,8 +1585,13 @@ function goTab(key){
   updateMobileViewClass();
   window.scrollTo({ top:0, behavior:"smooth" });
   if(key === "search"){
+    window.__searchOpen = true;
+    renderSidebar();
     const input = document.getElementById("searchInput");
     if(input) input.focus();
+  } else if(window.__searchOpen && !(state.searchQuery||"").trim()){
+    window.__searchOpen = false;
+    renderSidebar();
   }
 }
 function renderTabBar(){
@@ -1699,20 +1705,27 @@ function homeCategoryBar(){
   const header = document.querySelector("header .header-inner");
   if(bar && header && bar.parentElement.id === "sidebar"){ document.querySelector("header").appendChild(bar); }
 }
+function toggleListView(){
+  listViewMode = listViewMode === "grid" ? "list" : "grid";
+  try{ localStorage.setItem("bakboek_listview2", listViewMode); }catch(e){}
+  renderSidebar();
+}
 function renderSidebar(){
   homeCategoryBar();
   const el = document.getElementById("sidebar");
   const visible = getVisibleRecipes();
   const searching = !!(state.searchQuery||"").trim();
   const gridOn = listViewMode === "grid";
-  const searchBar = `
+  const isPhone = window.matchMedia("(max-width:760px)").matches;
+  const showSearch = !isPhone || window.__searchOpen || searching;
+  const searchBar = !showSearch ? "" : `
     <div class="search-row">
       <div class="search-box">
         ${ICONS.search}
         <input type="text" id="searchInput" placeholder="Zoek recept of ingrediënt…" value="${(state.searchQuery||"").replace(/"/g,"&quot;")}">
         ${state.searchQuery ? `<button id="searchClear" title="Wissen">${ICONS.x}</button>` : ""}
       </div>
-      <button class="view-toggle" id="viewToggle" title="${gridOn ? "Toon als lijst" : "Toon als raster"}">${gridOn ? TAB_ICONS.list : TAB_ICONS.grid}</button>
+      ${isPhone ? "" : `<button class="view-toggle" id="viewToggle" title="${gridOn ? "Toon als lijst" : "Toon als raster"}">${gridOn ? TAB_ICONS.list : TAB_ICONS.grid}</button>`}
     </div>`;
   const noFilterActive = !state.activeCategory && !searching;
   const emptyMsg = visible.length===0
@@ -1754,8 +1767,8 @@ function renderSidebar(){
     + listHTML;
   if(window.matchMedia("(max-width:760px)").matches){
     const bar = document.getElementById("categoryTabbar");
-    const row = el.querySelector(".search-row");
-    if(bar && row){ row.insertAdjacentElement("afterend", bar); }
+    const anchor = el.querySelector(".search-row") || el.querySelector(".hero");
+    if(bar){ anchor ? anchor.insertAdjacentElement("afterend", bar) : el.insertAdjacentElement("afterbegin", bar); }
   }
   wireGeneralTimer();
   el.querySelectorAll(".rcard").forEach(btn=>{
@@ -1770,13 +1783,10 @@ function renderSidebar(){
   });
   const bakInfo = document.getElementById("bakInfoBtn");
   if(bakInfo) bakInfo.addEventListener("click", ()=>openBakkersschemaPage());
-  document.getElementById("viewToggle").addEventListener("click", ()=>{
-    listViewMode = listViewMode === "grid" ? "list" : "grid";
-    try{ localStorage.setItem("bakboek_listview2", listViewMode); }catch(e){}
-    renderSidebar();
-  });
+  const vt = document.getElementById("viewToggle");
+  if(vt) vt.addEventListener("click", toggleListView);
   const searchInput = document.getElementById("searchInput");
-  searchInput.addEventListener("input", (e)=>{
+  if(searchInput) searchInput.addEventListener("input", (e)=>{
     state.searchQuery = e.target.value;
     renderSidebar();
     document.getElementById("searchInput").focus();
