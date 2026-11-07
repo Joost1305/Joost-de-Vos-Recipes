@@ -503,7 +503,11 @@
   .cm-title-row{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:12px;}
   .cm-recipe{font-size:19px;font-weight:600;line-height:1.2;}
   .cm-sub{font-size:12.5px;color:var(--muted);margin-top:2px;}
-  .cm-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+  .cm-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+  .cm-stat{min-width:0;}
+  #costOverlay .editor-body{overflow-x:hidden;overscroll-behavior:contain;}
+  #costBody{max-width:100%;overflow-x:hidden;}
+  .cm-facts div{min-width:0;flex-wrap:wrap;}
   .cm-stat{background:var(--card);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;}
   .cm-stat span{font-size:11.5px;color:var(--muted);}
   .cm-stat b{font-size:17px;font-family:'JetBrains Mono',monospace;}
@@ -514,7 +518,7 @@
   .cm-line{border-top:1px solid var(--border);padding:2px 0;}
   .cm-line:first-child{border-top:none;}
   .cm-line.missing{background:#fdf6f1;margin:0 -10px;padding:2px 10px 10px;border-radius:10px;border-top:none;margin-bottom:6px;}
-  .cm-line-main{display:grid;grid-template-columns:1fr auto auto;grid-template-areas:"n amt cost" "n price share";gap:2px 12px;width:100%;text-align:left;padding:9px 0;color:var(--ink);align-items:center;}
+  .cm-line-main{display:grid;grid-template-columns:minmax(0,1fr) auto auto;grid-template-areas:"n amt cost" "n price share";gap:2px 12px;width:100%;text-align:left;padding:9px 0;color:var(--ink);align-items:center;}
   .cm-line-main:disabled{cursor:default;opacity:1;}
   .cm-n{grid-area:n;display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;min-width:0;}
   .cm-name{font-size:14.5px;}
@@ -535,19 +539,20 @@
   .cm-edit-actions button{font-size:13px;color:var(--crust);padding:4px 0;}
   .cm-edit-actions input{flex:1;min-width:160px;padding:8px 10px;border:1px solid var(--border2);border-radius:10px;font-size:14px;}
   .ce-del{color:#b13c2a !important;}
-  .cm-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+  .cm-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+  .cm-grid > *{min-width:0;}
   .cm-grid label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted2);}
-  .cm-grid input,.cm-grid select{padding:10px;font-size:16px;border:1px solid var(--border2);border-radius:10px;background:#fff;color:var(--ink);}
+  .cm-grid input,.cm-grid select{width:100%;min-width:0;box-sizing:border-box;padding:10px;font-size:16px;border:1px solid var(--border2);border-radius:10px;background:#fff;color:var(--ink);}
   .cm-facts{display:flex;flex-direction:column;gap:4px;margin-top:8px;}
   .cm-facts div{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;}
   .cm-facts b{font-family:'JetBrains Mono',monospace;}
   .calc-table .cm-edit{margin:0 14px 12px;}
   @media(min-width:760px){
-    .cm-stats{grid-template-columns:repeat(4,1fr);}
-    .cm-grid{grid-template-columns:repeat(4,1fr);}
+    .cm-stats{grid-template-columns:repeat(4,minmax(0,1fr));}
+    .cm-grid{grid-template-columns:repeat(4,minmax(0,1fr));}
     .cm-head{display:grid;grid-template-columns:1fr 90px 110px 50px 80px 90px;gap:12px;font-size:11px;color:var(--muted);padding:0 0 4px;text-align:right;}
     .cm-head span:first-child{text-align:left;}
-    .cm-line-main{grid-template-columns:1fr 90px 110px 50px 80px 90px;grid-template-areas:"n amt price yield cost share";}
+    .cm-line-main{grid-template-columns:minmax(0,1fr) 90px 110px 50px 80px 90px;grid-template-areas:"n amt price yield cost share";}
     .cm-yield{display:block;grid-area:yield;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);text-align:right;}
     .cm-price{font-size:12px;}
     .calc-row.head{display:grid;font-size:11.5px;color:var(--muted);background:var(--bg);}
@@ -4928,7 +4933,7 @@ function renderCostBody(recipeId){
     <div class="cm-section-title">Verkoop</div>
     <div class="cm-grid">
       <label>Porties<input type="number" inputmode="decimal" id="cmPortions" min="0" step="1" value="${r.loaves || ""}" placeholder="bijv. 10"></label>
-      <label>Verkoopprijs p.p. incl. btw<input type="number" inputmode="decimal" id="cmSell" min="0" step="0.5" value="${r.sellPrice || ""}" placeholder="€"></label>
+      <label>Verkoop p.p. incl. btw<input type="number" inputmode="decimal" id="cmSell" min="0" step="0.5" value="${r.sellPrice || ""}" placeholder="€"></label>
       <label>Btw<select id="cmVat"><option value="9" ${f.vat===9?"selected":""}>9% (eten)</option><option value="21" ${f.vat===21?"selected":""}>21% (alcohol)</option></select></label>
       <label>Doel-foodcost %<input type="number" inputmode="numeric" id="cmTarget" min="1" max="99" step="1" value="${f.target || ""}" placeholder="bijv. 30"></label>
     </div>
@@ -4940,7 +4945,7 @@ function renderCostBody(recipeId){
 
     <div class="cm-section-title">Gebruik als basisrecept</div>
     <div class="cm-grid">
-      <label>Opbrengst in g of ml<input type="number" inputmode="decimal" id="cmOutput" min="0" step="1" value="${r.outputWeight || ""}" placeholder="${Math.round(recipeOutputAmount({ ...r, outputWeight:0 }))} (som ingrediënten)"></label>
+      <label>Opbrengst g/ml (leeg = som)<input type="number" inputmode="decimal" id="cmOutput" min="0" step="1" value="${r.outputWeight || ""}" placeholder="${Math.round(recipeOutputAmount({ ...r, outputWeight:0 }))}"></label>
       <div class="cm-facts"><div><span>Kostprijs per kg</span><b>${out > 0 ? eur(f.total / out * 1000) : "–"}</b></div></div>
     </div>
     <p class="cost-note">Gebruik je dit recept in een ander recept (zelfde naam als ingrediënt, of koppel het), dan telt deze prijs per kg mee. Vul de opbrengst in als er kookverlies is.</p>`;
