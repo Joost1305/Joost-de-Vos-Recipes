@@ -614,6 +614,26 @@
     .float-bar{bottom:calc(84px + env(safe-area-inset-bottom));}
     .toast{left:14px;right:14px;bottom:calc(94px + env(safe-area-inset-bottom));}
   }
+
+  .info-chip{display:flex;align-items:center;gap:8px;align-self:flex-start;background:var(--extras-bg);color:var(--muted2);border:1px solid var(--border);border-radius:999px;padding:7px 12px;font-size:13px;font-weight:600;}
+  .info-chip svg{width:15px;height:15px;}
+  .info-chip-arrow{color:var(--crust);font-size:16px;line-height:1;}
+  .info-chip:active{transform:scale(.97);}
+  /* ===== Phone: fullscreen recipes, back arrows, square previews ===== */
+  .hdr-back{display:none;width:36px;height:36px;border-radius:999px;background:#fff;border:1px solid var(--border);place-items:center;color:var(--ink);flex-shrink:0;}
+  .fab-back{position:fixed;top:calc(12px + env(safe-area-inset-top));left:12px;z-index:46;width:40px;height:40px;border-radius:999px;background:rgba(255,255,255,.92);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:0 2px 10px rgba(0,0,0,.18);display:grid;place-items:center;color:var(--ink);}
+  .fab-back:active{transform:scale(.94);}
+  .rlist.grid .rcard-thumb,.rlist.grid .rcard-badge{aspect-ratio:1/1;}
+  @media(min-width:761px){ .hdr-back,.fab-back{display:none !important;} }
+  @media(max-width:760px){
+    .hdr-back{display:grid;}
+    #headerNewBtn{display:none;}
+    body.mode-detail header{display:none;}
+    body.mode-detail main{padding:0 0 calc(110px + env(safe-area-inset-bottom));}
+    body.mode-detail .detail{border-radius:0;border:none;box-shadow:none;}
+    body.mode-detail .photo-wrap{height:280px;}
+    body.mode-detail .float-bar{bottom:calc(92px + env(safe-area-inset-bottom));}
+  }
 </style>
 </head>
 <body>
@@ -621,6 +641,7 @@
 <header class="no-print">
   <div class="header-inner">
     <div class="brand">
+      <button class="hdr-back hidden" id="hdrBack" aria-label="Terug naar home"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C97C3D" stroke-width="2"><path d="M12 2c-3 3-6 6-6 11a6 6 0 0 0 12 0c0-5-3-8-6-11z"/></svg>
       <h1 class="font-display"><span class="brand-long">Joost de Vos Recipe Folder</span><span class="brand-short">Bakboek</span></h1>
     </div>
@@ -684,6 +705,7 @@
 </div>
 
 <nav class="tabbar no-print" id="tabBar" aria-label="Hoofdmenu"></nav>
+<button class="fab-back no-print hidden" id="fabBack" aria-label="Terug naar home"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
 <div class="detail-bar no-print hidden" id="detailBar"></div>
 <div class="sheet-overlay hidden no-print" id="sheetOverlay"><div class="sheet" id="sheet" role="dialog"></div></div>
 
@@ -1466,8 +1488,8 @@ const TAB_ICONS = {
   list: _ti('<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="3.5" cy="6" r="1" fill="currentColor"/><circle cx="3.5" cy="12" r="1" fill="currentColor"/><circle cx="3.5" cy="18" r="1" fill="currentColor"/>'),
 };
 const TAB_DEFS = [
-  { key:"recipes", label:"Recepten" },
   { key:"search", label:"Zoeken" },
+  { key:"recipes", label:"Recepten" },
   { key:"bake", label:"Bakken" },
   { key:"insp", label:"Inspiratie" },
   { key:"more", label:"Meer" },
@@ -1493,6 +1515,13 @@ document.getElementById("sheetOverlay").addEventListener("click", (e)=>{ if(e.ta
 function openMoreSheet(){
   const ic = (k)=>ICONS[k];
   openSheet("Meer", [
+    { id:"new", items:[
+      { icon:ic("plus"), label:"Nieuw recept", fn:()=>openEditor(null) },
+    ]},
+    { id:"sch", heading:"Bakschema", items:[
+      { icon:ic("clock"), label:"Bakkersschema (werkwijze en watertemperatuur)", fn:()=>openBakkersschemaPage() },
+      { icon:ic("book"), label:"Werkschema (dag 1 tot 3)", fn:()=>openWerkschemaModal() },
+    ]},
     { id:"imp", heading:"Recepten importeren", items:[
       { icon:ic("fileDoc"), label:"Word-document(en)", fn:()=>document.getElementById("docxInput").click() },
       { icon:ic("filePdf"), label:"PDF (meerdere recepten)", fn:()=>document.getElementById("pdfInput").click() },
@@ -1536,12 +1565,33 @@ function openRecipeMoreSheet(r){
     { icon:ICONS.printer, label:"Download als PDF", fn:()=>shareRecipeAsPDF(r.id) },
   ]}]);
 }
+function openBakkersschemaPage(){
+  const wasElsewhere = !document.getElementById("viewInspiration").classList.contains("hidden")
+    || !document.getElementById("viewBake").classList.contains("hidden");
+  if(wasElsewhere) showInspirationView(false);
+  state.selectedId = "__schema__";
+  state.mobileView = "detail";
+  state.searchQuery = "";
+  renderSidebar();
+  renderDetail();
+  window.scrollTo(0,0);
+}
+function goHome(){
+  closeSheet();
+  const wasElsewhere = !document.getElementById("viewInspiration").classList.contains("hidden")
+    || !document.getElementById("viewBake").classList.contains("hidden");
+  if(wasElsewhere) showInspirationView(false);
+  if(state.selectedId === "__schema__") state.selectedId = null;
+  state.mobileView = "list";
+  renderSidebar();
+  renderDetail();
+  window.scrollTo(0,0);
+}
 function renderDetailBar(r){
   const bar = document.getElementById("detailBar");
   const scale = getScale(r.id);
   const onList = state.listIds.includes(r.id);
   bar.innerHTML = `
-    <button class="db-btn" id="dbBack" aria-label="Terug naar recepten">${TAB_ICONS.back}<span>Recepten</span></button>
     <div class="db-scale">
       <button id="dbMinus" aria-label="Kleiner">${ICONS.minus}</button>
       <span class="font-mono">${fmt(scale)}×</span>
@@ -1549,7 +1599,6 @@ function renderDetailBar(r){
     </div>
     <button class="db-btn ${onList ? "on" : ""}" id="dbList" aria-label="Boodschappenlijst">${TAB_ICONS.cart}<span>${onList ? "Op lijst" : "Boodschappen"}</span></button>
     <button class="db-btn" id="dbMore" aria-label="Meer">${TAB_ICONS.more}<span>Meer</span></button>`;
-  document.getElementById("dbBack").addEventListener("click", goToMobileList);
   document.getElementById("dbMinus").addEventListener("click", ()=>setScale(r.id, getScale(r.id)-0.25));
   document.getElementById("dbPlus").addEventListener("click", ()=>setScale(r.id, getScale(r.id)+0.25));
   document.getElementById("dbList").addEventListener("click", ()=>toggleList(r.id));
@@ -1563,18 +1612,24 @@ function updateBottomBars(){
   const bakeOpen = !document.getElementById("viewBake").classList.contains("hidden");
   const r = findRecipe(state.selectedId);
   const detailMode = !inspOpen && !bakeOpen && state.mobileView === "detail" && !!r;
+  const atHome = !inspOpen && !bakeOpen && state.mobileView === "list";
   tab.classList.toggle("hidden", detailMode);
   dbar.classList.toggle("hidden", !detailMode);
+  document.getElementById("fabBack").classList.toggle("hidden", !detailMode);
+  document.getElementById("hdrBack").classList.toggle("hidden", atHome || detailMode);
+  document.body.classList.toggle("mode-detail", detailMode);
   const active = inspOpen ? "insp" : bakeOpen ? "bake" : "recipes";
   tab.querySelectorAll("button").forEach(b=>b.classList.toggle("on", b.dataset.tab === active));
   if(detailMode) renderDetailBar(r);
 }
+document.getElementById("fabBack").addEventListener("click", goToMobileList);
+document.getElementById("hdrBack").addEventListener("click", goHome);
 document.getElementById("headerNewBtn").addEventListener("click", ()=>openEditor(null));
 
 // ---------------------------------------------------------------------------
 // Render
 // ---------------------------------------------------------------------------
-let listViewMode = (()=>{ try{ return localStorage.getItem("bakboek_listview") || "list"; }catch(e){ return "list"; } })();
+let listViewMode = (()=>{ try{ return localStorage.getItem("bakboek_listview2") || "grid"; }catch(e){ return "grid"; } })();
 function greetingText(){
   const h = new Date().getHours();
   return (h < 12 ? "Goedemorgen" : h < 18 ? "Goedemiddag" : "Goedenavond") + ", Joost";
@@ -1611,8 +1666,12 @@ function renderSidebar(){
         ? `<p class="journal-empty" style="padding:6px 2px;">Kies een categorie hierboven om recepten te zien.</p>`
         : `<p class="journal-empty" style="padding:6px 2px;">Geen recepten gevonden.</p>`)
     : "";
-  el.innerHTML = (searching ? "" : renderHeroHTML())
+  const breadInfo = (state.activeCategory === "Brood" && !searching)
+    ? `<button class="info-chip" id="bakInfoBtn">${ICONS.book}<span>Bakkersinformatie</span><span class="info-chip-arrow">›</span></button>`
+    : "";
+  el.innerHTML = ((searching || state.activeCategory !== "__all__") ? "" : renderHeroHTML())
     + searchBar
+    + breadInfo
     + emptyMsg
     + `<div class="rlist ${gridOn ? "grid" : ""}">` + visible.map(r=>{
     const photo = state.photos[r.id];
@@ -1632,6 +1691,7 @@ function renderSidebar(){
   wireGeneralTimer();
   el.querySelectorAll(".rcard").forEach(btn=>{
     btn.addEventListener("click", ()=>{
+      window.__listScroll = window.scrollY;
       state.selectedId = btn.dataset.id;
       state.mobileView = "detail";
       renderSidebar();
@@ -1639,11 +1699,13 @@ function renderSidebar(){
       window.scrollTo({ top: 0, behavior: "instant" });
     });
   });
+  const bakInfo = document.getElementById("bakInfoBtn");
+  if(bakInfo) bakInfo.addEventListener("click", ()=>openBakkersschemaPage());
   const heroBake = document.getElementById("heroBakeBtn");
   if(heroBake) heroBake.addEventListener("click", ()=>showBakeView(true));
   document.getElementById("viewToggle").addEventListener("click", ()=>{
     listViewMode = listViewMode === "grid" ? "list" : "grid";
-    try{ localStorage.setItem("bakboek_listview", listViewMode); }catch(e){}
+    try{ localStorage.setItem("bakboek_listview2", listViewMode); }catch(e){}
     renderSidebar();
   });
   const searchInput = document.getElementById("searchInput");
@@ -1668,8 +1730,8 @@ function renderCategoryTabs(){
   bar.querySelectorAll(".cat-tab").forEach(btn=>{
     btn.addEventListener("click", ()=>{
       state.activeCategory = btn.dataset.cat;
-      state.selectedId = (btn.dataset.cat === "Brood") ? "__schema__" : null;
-      state.mobileView = (btn.dataset.cat === "Brood") ? "detail" : "list";
+      state.selectedId = null;
+      state.mobileView = "list";
       state.searchQuery = "";
       renderSidebar();
       renderDetail();
@@ -1691,7 +1753,8 @@ function renderDetail(){
 function goToMobileList(){
   state.mobileView = "list";
   updateMobileViewClass();
-  window.scrollTo(0,0);
+  window.scrollTo(0, window.__listScroll || 0);
+  window.__listScroll = 0;
 }
 
 function goToWaterCalculator(){
