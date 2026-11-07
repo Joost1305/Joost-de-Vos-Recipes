@@ -390,9 +390,9 @@
 
   /* recipe editor */
   .note-panel{max-width:480px;}
-  #editorOverlay, #weblinkOverlay, #settingsOverlay, #pdfReviewOverlay, #pinOverlay, #costOverlay, #werkschemaOverlay{position:fixed;inset:0;background:rgba(15,22,16,.55);z-index:70;display:none;align-items:flex-end;justify-content:center;}
-  #editorOverlay.show, #weblinkOverlay.show, #settingsOverlay.show, #pdfReviewOverlay.show, #pinOverlay.show, #costOverlay.show, #werkschemaOverlay.show{display:flex;}
-  @media(min-width:640px){ #editorOverlay, #weblinkOverlay, #settingsOverlay, #pdfReviewOverlay, #pinOverlay, #costOverlay, #werkschemaOverlay{align-items:center;} }
+  #editorOverlay, #weblinkOverlay, #settingsOverlay, #pickOverlay, #pdfReviewOverlay, #pinOverlay, #costOverlay, #werkschemaOverlay{position:fixed;inset:0;background:rgba(15,22,16,.55);z-index:70;display:none;align-items:flex-end;justify-content:center;}
+  #editorOverlay.show, #weblinkOverlay.show, #settingsOverlay.show, #pickOverlay.show, #pdfReviewOverlay.show, #pinOverlay.show, #costOverlay.show, #werkschemaOverlay.show{display:flex;}
+  @media(min-width:640px){ #editorOverlay, #weblinkOverlay, #settingsOverlay, #pickOverlay, #pdfReviewOverlay, #pinOverlay, #costOverlay, #werkschemaOverlay{align-items:center;} }
   .cost-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--border);font-size:13.5px;}
   .cost-row:first-child{border-top:none;}
   .cost-row .cost-name{flex:1;min-width:0;}
@@ -470,7 +470,32 @@
   .fx-chip small{font-size:11px;color:var(--muted2);}
   .fx-row{display:flex;gap:6px;}
   .fx-row input,.fx-row select{min-width:0;padding:9px 10px;font-size:15px;border:1px solid var(--border2);border-radius:10px;background:#fff;color:var(--ink);}
-  .fx-link,.ce-name{flex:1;}
+  .ce-name{flex:1;}
+  .fx-search{display:flex;align-items:center;gap:8px;width:100%;padding:10px 12px;border:1px solid var(--border2);border-radius:10px;background:#fff;color:var(--muted);font-size:15px;text-align:left;}
+  .fx-search svg{width:16px;height:16px;flex-shrink:0;}
+  .ce-relink{font-size:13px;color:var(--crust);}
+  #pickOverlay{z-index:80;}
+  .pick-panel{max-width:560px;}
+  #pickOverlay .editor-panel{height:85vh;}
+  .pick-search{padding:10px 16px;border-bottom:1px solid var(--border);}
+  .pick-search input{width:100%;padding:11px 14px;font-size:16px;border:1px solid var(--border2);border-radius:12px;background:#fff;}
+  .pick-list{display:flex;flex-direction:column;}
+  .pick-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 4px;border-bottom:1px solid var(--border);text-align:left;color:var(--ink);width:100%;}
+  .pick-item:active{background:var(--extras-bg);}
+  .pi-n{display:flex;flex-direction:column;font-size:15px;min-width:0;}
+  .pi-n small{font-size:12px;color:var(--muted);}
+  .pi-p{font-family:'JetBrains Mono',monospace;font-size:13px;white-space:nowrap;}
+  .pi-p.sub{font-family:inherit;font-size:12px;color:var(--crust);}
+  .miss-bulk{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:0 14px 10px;font-size:12px;color:var(--muted);}
+  .bulk-row{display:flex;gap:10px;align-items:flex-start;padding:10px 2px;border-bottom:1px solid var(--border);}
+  .bulk-check input{width:20px;height:20px;margin-top:2px;accent-color:var(--crust);}
+  .bulk-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;}
+  .bulk-from{font-size:15px;font-weight:500;}
+  .bulk-from small{font-size:12px;color:var(--muted);font-weight:400;}
+  .bulk-to{font-size:13.5px;color:var(--crust);text-align:left;}
+  .bulk-to small{color:var(--muted);}
+  .bulk-to.none{color:var(--muted);}
+  .bulk-row:not(.on) .bulk-to:not(.none){color:var(--muted2);}
   .fx-price .fx-p,.fx-price .ce-p{flex:1.2;} .fx-price select{flex:1;} .fx-price .fx-y,.fx-price .ce-y{flex:.8;}
   .fx-save{flex:1;font-size:14px;font-weight:500;border-radius:10px;background:var(--crust);color:#fff;padding:9px 10px;}
   .fx-free{align-self:flex-start;font-size:12.5px;color:var(--crust);padding:2px 0;}
@@ -828,6 +853,10 @@
   .hero-head{padding-right:0;min-width:0;}
   .hero-greet{font-size:19px;}
   .hero-alarm{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);color:#f1f4ea;border-radius:999px;padding:8px 12px;flex-shrink:0;}
+  .hero-btns{display:flex;gap:8px;flex-shrink:0;align-items:center;}
+  .hero-fin{position:relative;padding:6px 10px;}
+  .fin-euro{width:28px;height:28px;border-radius:9px;background:var(--crust);color:#fff;display:grid;place-items:center;font-weight:700;font-size:16px;font-family:'Fraunces',serif;}
+  .fin-badge{position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#E08A76;color:#fff;font-size:11px;font-weight:600;display:grid;place-items:center;}
   .hero-alarm .alarm-emoji{font-size:20px;line-height:1;}
   .hero-alarm .alarm-time{font-size:14px;font-weight:500;}
   .hero-alarm.running{border-color:var(--crust-h);background:rgba(138,79,148,.35);}
@@ -1023,6 +1052,21 @@
     <div class="editor-foot">
       <button class="btn btn-secondary" id="weblinkCancel">Annuleren</button>
       <button class="btn btn-primary" id="weblinkImportBtn">Importeer</button>
+    </div>
+  </div>
+</div>
+
+<div id="pickOverlay" class="no-print">
+  <div class="editor-panel pick-panel">
+    <div class="editor-head">
+      <h3 id="pickTitle">Koppelen</h3>
+      <button id="pickClose" class="icon-btn-outline" title="Sluiten">✕</button>
+    </div>
+    <div class="pick-search"><input type="search" id="pickQ" placeholder="Zoek product of basisrecept…" autocomplete="off"></div>
+    <div class="editor-body" id="pickBody"></div>
+    <div class="editor-foot hidden" id="pickFoot">
+      <button class="btn btn-secondary" id="pickCancel">Annuleren</button>
+      <button class="btn btn-primary" id="pickApply">Koppel</button>
     </div>
   </div>
 </div>
@@ -1889,7 +1933,7 @@ function renderHeroHTML(){
         <h2 class="hero-greet font-display">${greetingText()}</h2>
         <div class="hero-date">${date}</div>
       </div>
-      ${renderAlarmBtnHTML()}
+      <div class="hero-btns">${financeHeroBtnHTML()}${renderAlarmBtnHTML()}</div>
     </div>
     <div class="general-timer-wrap">${renderGeneralTimerHTML()}</div>
   </div>`;
@@ -1966,14 +2010,14 @@ function renderSidebar(){
       ? `<div class="list-label">Laatst gebruikt</div><div class="${rl}">${recentRecipes.map(cardHTML).join("")}</div><div class="list-label">Alle recepten</div>`
       : "")
     + `<div class="${rl}">${restRecipes.map(cardHTML).join("")}</div>`;
-  el.innerHTML = ((searching || state.activeCategory !== "__all__") ? "" : renderHeroHTML() + financeTileHTML())
+  el.innerHTML = ((searching || state.activeCategory !== "__all__") ? "" : renderHeroHTML())
     + searchBar
     + breadInfo
     + emptyMsg
     + listHTML;
   if(window.matchMedia("(max-width:760px)").matches){
     const bar = document.getElementById("categoryTabbar");
-    const anchor = el.querySelector(".search-row") || el.querySelector(".finance-tile") || el.querySelector(".hero");
+    const anchor = el.querySelector(".search-row") || el.querySelector(".hero");
     if(bar){ anchor ? anchor.insertAdjacentElement("afterend", bar) : el.insertAdjacentElement("afterbegin", bar); }
   }
   wireGeneralTimer();
@@ -1987,7 +2031,7 @@ function renderSidebar(){
       window.scrollTo({ top: 0, behavior: "instant" });
     });
   });
-  const ftile = document.getElementById("financeTile");
+  const ftile = document.getElementById("financeHeroBtn");
   if(ftile) ftile.addEventListener("click", ()=>showCalcView(true));
   const bakInfo = document.getElementById("bakInfoBtn");
   if(bakInfo) bakInfo.addEventListener("click", ()=>openBakkersschemaPage());
@@ -4495,7 +4539,9 @@ function normTokens(s){
     .map(t=>t.length > 4 ? t.replace(/(eren|en|s)$/, "") : t);
 }
 function tokenHit(t, list){
-  return list.some(u=>u === t || (t.length > 3 && u.length > 3 && (u.includes(t) || t.includes(u)))
+  // Dutch compounds: the word sits at the start (kaneelpoeder) or end (zeezout), not in the middle (ongezouten).
+  const part = (x, y)=>x.startsWith(y) || x.endsWith(y);
+  return list.some(u=>u === t || (t.length > 3 && u.length > 3 && !MATCH_FORM.has(u) && !MATCH_FORM.has(t) && (part(u, t) || part(t, u)))
     || (t.length >= 6 && u.length >= 6 && t.slice(0,6) === u.slice(0,6)));
 }
 function nameSimilarity(a, b){
@@ -4503,6 +4549,31 @@ function nameSimilarity(a, b){
   const ha = a.filter(t=>tokenHit(t, b)).length / a.length;
   const hb = b.filter(t=>tokenHit(t, a)).length / b.length;
   return (ha*2 + hb) / 3;
+}
+// Product words: a "kaneelkoek" is not what a recipe means by "kaneel".
+const MATCH_PRODUCT = new Set(["koek","koekje","koekjes","taart","saus","mix","siroop","stroop","thee","drop","chip","chips","reep","ijs","cake","broodje","jam","likeur","sap","snoep","bonbon","bonbons","dressing","marinade","pasta","spread","yoghurt","vla","pudding","toffee","koffie","blokje","bouillon","drank","wafel","wafels","snack","bar","crumble"]);
+const MATCH_FORM = new Set(["poeder","gemalen","gemaal","vers","verse","heel","hele","gedroogd","gedroogde","vlok","vlokken","korrel","korrels","blad","bladeren","zaad","zaden","fijn","grof","puur","naturel","ongezouten","gezouten","ongezout","gezout"]);
+function matchScore(t, cand){
+  let s = nameSimilarity(t, cand);
+  if(s === 0) return 0;
+  t.forEach(x=>{
+    cand.forEach(u=>{
+      if(u === x) s += 0.12;
+      else if(u.startsWith(x)){
+        const rem = u.slice(x.length);
+        if(MATCH_FORM.has(rem)) s += 0.15;
+        else if(MATCH_PRODUCT.has(rem) || MATCH_PRODUCT.has(rem.replace(/(je|jes|s)$/, ""))) s -= 0.35;
+        else s -= 0.04;
+      }
+    });
+  });
+  cand.forEach(u=>{ if(MATCH_PRODUCT.has(u) && !t.includes(u)) s -= 0.3; else if(MATCH_FORM.has(u)) s += 0.05; });
+  s -= 0.03 * cand.filter(u=>!tokenHit(u, t)).length;
+  return s;
+}
+function prettyName(n){
+  const str = String(n || "");
+  return str === str.toUpperCase() && /[A-Z]/.test(str) ? str.charAt(0) + str.slice(1).toLowerCase() : str;
 }
 let _priceTokenCache = { ref:null, list:[] };
 function priceTokenList(){
@@ -4512,19 +4583,19 @@ function priceTokenList(){
   }
   return _priceTokenCache.list;
 }
-function suggestMatches(name, selfId, n=3){
+function suggestMatches(name, selfId, n=3, minScore=0.45, excludeIds){
   const t = normTokens(name);
   if(!t.length) return [];
   const out = [];
   priceTokenList().forEach(p=>{
-    const s = nameSimilarity(t, p.tokens);
-    if(s >= 0.45) out.push({ kind:"price", key:p.key, label:p.entry.name, extra: `${eur(displayPrice(p.entry.price,p.entry.unit).val)}/${displayPrice(p.entry.price,p.entry.unit).unit}`, score:s });
+    const s = matchScore(t, p.tokens);
+    if(s >= minScore) out.push({ kind:"price", key:p.key, label:prettyName(p.entry.name), extra: `${eur(displayPrice(p.entry.price,p.entry.unit).val)}/${displayPrice(p.entry.price,p.entry.unit).unit}`, score:s });
   });
   state.recipes.forEach(rr=>{
-    if(rr.id === selfId) return;
+    if(rr.id === selfId || (excludeIds && excludeIds.has(rr.id))) return;
     // A recipe must match on most of its own title words, not just one shared word.
     const rt = normTokens(rr.title);
-    const s = (t.filter(x=>tokenHit(x, rt)).length / t.length + 2 * rt.filter(x=>tokenHit(x, t)).length / (rt.length||1)) / 3;
+    const s = Math.min(matchScore(t, rt), (t.filter(x=>tokenHit(x, rt)).length / t.length + 2 * rt.filter(x=>tokenHit(x, t)).length / (rt.length||1)) / 3);
     if(s >= 0.75) out.push({ kind:"recipe", key:"recipe:"+rr.id, label:rr.title, extra:"basisrecept", score:s + 0.05 });
   });
   return out.sort((a,b)=>b.score - a.score).slice(0, n);
@@ -4575,13 +4646,11 @@ function unitOptions(selected){
 function defaultDispUnit(u){ return u === "g" ? "kg" : u === "ml" ? "l" : "stuks"; }
 
 // Shared editor for an ingredient without a usable price: suggestions, link, own price, free.
-function fixerHTML(name, unit, selfId, id){
-  const sugg = suggestMatches(name, selfId);
-  return `<div class="fx" data-fx="${id}" data-name="${escHtml(name)}">
+function fixerHTML(name, unit, selfId, id, excludeIds){
+  const sugg = suggestMatches(name, selfId, 3, 0.45, excludeIds);
+  return `<div class="fx" data-fx="${id}" data-name="${escHtml(name)}" data-excl="${excludeIds ? Array.from(excludeIds).join(",") : ""}">
     ${sugg.length ? `<div class="fx-label">Bedoel je</div><div class="fx-chips">${sugg.map(s=>`<button type="button" class="fx-chip" data-target="${escHtml(s.key)}"><span>${escHtml(s.label)}</span><small>${escHtml(s.extra)}</small></button>`).join("")}</div>` : ""}
-    <div class="fx-row">
-      <input type="text" class="fx-link" list="knownPriceIngredients" placeholder="Zoek in prijslijst of basisrecept…">
-    </div>
+    <button type="button" class="fx-search">${ICONS.search || "⌕"}<span>Zoek in prijslijst of basisrecept…</span></button>
     <div class="fx-row fx-price">
       <input type="number" inputmode="decimal" class="fx-p" min="0" step="0.01" placeholder="Prijs €">
       <select class="fx-u">${unitOptions(defaultDispUnit(unit))}</select>
@@ -4597,11 +4666,8 @@ function wireFixers(root, selfId, after){
     fx.querySelectorAll(".fx-chip").forEach(b=>b.addEventListener("click", async ()=>{
       await linkIngredient(name, b.dataset.target); after(`"${name}" gekoppeld.`);
     }));
-    fx.querySelector(".fx-link").addEventListener("change", async (e)=>{
-      const t = linkTargetFromText(e.target.value);
-      if(!t){ showToast("Kies een naam uit de lijst."); return; }
-      if(t === "recipe:" + selfId){ showToast("Een recept kan niet naar zichzelf verwijzen."); return; }
-      await linkIngredient(name, t); after(`"${name}" gekoppeld.`);
+    fx.querySelector(".fx-search").addEventListener("click", ()=>{
+      openPicker(name, selfId, async (t)=>{ await linkIngredient(name, t); after(`"${name}" gekoppeld.`); }, new Set((fx.dataset.excl||"").split(",").filter(Boolean)));
     });
     fx.querySelector(".fx-save").addEventListener("click", async ()=>{
       const p = parseFloat(fx.querySelector(".fx-p").value.replace(",", "."));
@@ -4620,6 +4686,120 @@ function wireFixers(root, selfId, after){
     });
   });
 }
+
+// --- Koppel-venster: scrollbare lijst met zoekveld ---
+let pickCtx = null;
+function pickResults(query, selfId, excludeIds){
+  const q = (query||"").trim();
+  const t = normTokens(q);
+  const ql = q.toLowerCase();
+  const out = [];
+  priceTokenList().forEach(p=>{
+    let s = t.length ? matchScore(t, p.tokens) : 0;
+    const nm = (p.entry.name||"").toLowerCase();
+    if(ql && nm.includes(ql)) s = Math.max(s, 0.5) + (nm.startsWith(ql) ? 0.2 : 0.1);
+    if(s > 0.2) out.push({ kind:"price", key:p.key, entry:p.entry, score:s });
+  });
+  state.recipes.forEach(rr=>{
+    if(rr.id === selfId || (excludeIds && excludeIds.has(rr.id))) return;
+    const tl = rr.title.toLowerCase();
+    let s = t.length ? nameSimilarity(t, normTokens(rr.title)) * 0.9 : 0;
+    if(ql && tl.includes(ql)) s = Math.max(s, 0.6) + 0.1;
+    if(s > 0.35) out.push({ kind:"recipe", key:"recipe:"+rr.id, recipe:rr, score:s });
+  });
+  return out.sort((a,b)=>b.score - a.score).slice(0, 60);
+}
+function openPicker(ingName, selfId, onPick, excludeIds){
+  pickCtx = { mode:"single", ingName, selfId, onPick, excludeIds: excludeIds || new Set() };
+  document.getElementById("pickTitle").textContent = `Koppel "${ingName}"`;
+  document.getElementById("pickFoot").classList.add("hidden");
+  document.querySelector("#pickOverlay .pick-search").classList.remove("hidden");
+  const q = document.getElementById("pickQ");
+  q.value = ingName;
+  renderPickList();
+  document.getElementById("pickOverlay").classList.add("show");
+  setTimeout(()=>{ q.select(); }, 50);
+}
+function renderPickList(){
+  if(!pickCtx || pickCtx.mode !== "single") return;
+  const res = pickResults(document.getElementById("pickQ").value, pickCtx.selfId, pickCtx.excludeIds);
+  const body = document.getElementById("pickBody");
+  body.innerHTML = res.length ? `<div class="pick-list">${res.map((r,i)=>{
+    if(r.kind === "price"){
+      const d = displayPrice(r.entry.price, r.entry.unit);
+      return `<button type="button" class="pick-item" data-i="${i}"><span class="pi-n">${escHtml(prettyName(r.entry.name))}<small>${escHtml(r.entry.supplier || "")}${r.entry.yieldPct && r.entry.yieldPct < 100 ? ` · rend. ${r.entry.yieldPct}%` : ""}</small></span><span class="pi-p">${eur(d.val)}/${d.unit}</span></button>`;
+    }
+    return `<button type="button" class="pick-item" data-i="${i}"><span class="pi-n">${escHtml(r.recipe.title)}<small>basisrecept</small></span><span class="pi-p sub">recept</span></button>`;
+  }).join("")}</div>` : `<p class="calc-empty">Niets gevonden. Probeer een ander woord, of sluit dit venster en vul zelf een prijs in.</p>`;
+  body.querySelectorAll(".pick-item").forEach(b=>b.addEventListener("click", async ()=>{
+    const r = res[+b.dataset.i];
+    const cb = pickCtx.onPick;
+    closePicker();
+    await cb(r.key);
+  }));
+  body.scrollTop = 0;
+}
+function closePicker(){ document.getElementById("pickOverlay").classList.remove("show"); pickCtx = null; }
+document.getElementById("pickQ").addEventListener("input", renderPickList);
+document.getElementById("pickClose").addEventListener("click", closePicker);
+document.getElementById("pickCancel").addEventListener("click", closePicker);
+document.getElementById("pickOverlay").addEventListener("click", (e)=>{ if(e.target.id === "pickOverlay") closePicker(); });
+
+// Bulk: best guess for every missing ingredient; confident ones pre-ticked.
+function openBulkLink(missing){
+  const rows = missing.map(m=>{
+    const top = suggestMatches(m.name, null, 2, 0.5, m.recipes);
+    const best = top[0] || null;
+    // Pre-tick only when the guess is strong and clearly ahead of the runner-up.
+    const sure = !!best && best.score >= 0.8 && (!top[1] || best.score - top[1].score >= 0.1);
+    return { name:m.name, count:m.recipes.size, recipes:m.recipes, best, on: sure };
+  });
+  pickCtx = { mode:"bulk", rows };
+  document.getElementById("pickTitle").textContent = "Automatisch koppelen";
+  document.querySelector("#pickOverlay .pick-search").classList.add("hidden");
+  document.getElementById("pickFoot").classList.remove("hidden");
+  renderBulkList();
+  document.getElementById("pickOverlay").classList.add("show");
+}
+function renderBulkList(){
+  const rows = pickCtx.rows;
+  const withBest = rows.filter(r=>r.best).length;
+  const body = document.getElementById("pickBody");
+  body.innerHTML = `<p class="set-hint">${withBest} van ${rows.length} ingrediënten hebben een voorstel. Vink uit wat niet klopt, of tik op een voorstel om iets anders te kiezen.</p>
+    <div class="pick-list">${rows.map((r,i)=>`<div class="bulk-row ${r.on ? "on" : ""}">
+      <label class="bulk-check"><input type="checkbox" data-i="${i}" ${r.on ? "checked" : ""} ${r.best ? "" : "disabled"}></label>
+      <div class="bulk-main">
+        <div class="bulk-from">${escHtml(r.name)} <small>${r.count} recept${r.count===1?"":"en"}</small></div>
+        <button type="button" class="bulk-to ${r.best ? "" : "none"}" data-c="${i}">${r.best ? `→ ${escHtml(r.best.label)} <small>${escHtml(r.best.extra)}</small>` : "Geen voorstel, tik om te zoeken"}</button>
+      </div>
+    </div>`).join("")}</div>`;
+  const count = rows.filter(r=>r.on && r.best).length;
+  document.getElementById("pickApply").textContent = count ? `Koppel ${count}` : "Koppel";
+  body.querySelectorAll("input[data-i]").forEach(cb=>cb.addEventListener("change", ()=>{ rows[+cb.dataset.i].on = cb.checked; renderBulkList(); }));
+  body.querySelectorAll("[data-c]").forEach(b=>b.addEventListener("click", ()=>{
+    const i = +b.dataset.c, row = rows[i], saved = pickCtx;
+    openPicker(row.name, null, async (key)=>{
+      const label = key.startsWith("recipe:") ? (findRecipe(key.slice(7))||{}).title : prettyName(state.ingredientPrices[key].name);
+      row.best = { key, label, extra:"zelf gekozen", score:1 }; row.on = true;
+      pickCtx = saved;
+      document.getElementById("pickTitle").textContent = "Automatisch koppelen";
+      document.querySelector("#pickOverlay .pick-search").classList.add("hidden");
+      document.getElementById("pickFoot").classList.remove("hidden");
+      renderBulkList();
+      document.getElementById("pickOverlay").classList.add("show");
+    }, row.recipes);
+  }));
+}
+document.getElementById("pickApply").addEventListener("click", async ()=>{
+  if(!pickCtx || pickCtx.mode !== "bulk") return;
+  const sel = pickCtx.rows.filter(r=>r.on && r.best);
+  if(!sel.length){ closePicker(); return; }
+  sel.forEach(r=>{ state.priceAliases[ingKey(r.name)] = r.best.key; });
+  await saveState();
+  closePicker();
+  renderCalcPrices();
+  showToast(`${sel.length} ingrediënten gekoppeld.`);
+});
 
 // --- Kostprijsvenster per recept ---
 let calcOpenRow = null;
@@ -4667,7 +4847,7 @@ function renderCostBody(recipeId){
       const d = displayPrice(l.unitCost, l.res.entry.unit);
       priceTxt = `${eur(d.val)}/${d.unit}`;
       yieldTxt = (l.res.entry.yieldPct && l.res.entry.yieldPct < 100) ? `${l.res.entry.yieldPct}%` : "";
-      if(l.res.alias) tag = `<span class="cm-tag">→ ${escHtml(l.res.entry.name)}</span>`;
+      if(l.res.alias) tag = `<span class="cm-tag">→ ${escHtml(prettyName(l.res.entry.name))}</span>`;
       if(l.res.entry.price === 0) tag += `<span class="cm-tag">gratis</span>`;
     }else if(l.res && l.res.kind === "recipe" && l.unitCost != null){
       const d = displayPrice(l.unitCost, l.unit);
@@ -4693,7 +4873,7 @@ function renderCostBody(recipeId){
           ${opts.length > 1 ? `<div class="cm-edit-meta">Leverancier: <select class="ce-pick">${pickOptionsHTML(e)}</select></div>` : ""}
           <div class="cm-edit-actions">
             ${l.res.alias ? `<button type="button" class="ce-unlink">Koppeling losmaken</button>` : ""}
-            <input type="text" class="ce-relink" list="knownPriceIngredients" placeholder="Andere koppeling…">
+            <button type="button" class="ce-relink">Andere koppeling kiezen</button>
           </div>
         </div>`;
       }else{
@@ -4788,11 +4968,8 @@ function renderCostBody(recipeId){
     const un = ed.querySelector(".ce-unlink");
     if(un) un.addEventListener("click", async ()=>{ await unlinkIngredient(l.ing.name); calcOpenRow = null; rerender("Koppeling losgemaakt."); });
     const rl = ed.querySelector(".ce-relink");
-    if(rl) rl.addEventListener("change", async ()=>{
-      const t = linkTargetFromText(rl.value);
-      if(!t){ showToast("Kies een naam uit de lijst."); return; }
-      if(t === "recipe:" + r.id){ showToast("Een recept kan niet naar zichzelf verwijzen."); return; }
-      await linkIngredient(l.ing.name, t); rerender("Koppeling aangepast.");
+    if(rl) rl.addEventListener("click", ()=>{
+      openPicker(l.ing.name, r.id, async (t)=>{ await linkIngredient(l.ing.name, t); rerender("Koppeling aangepast."); });
     });
     ed.querySelectorAll(".ce-opensub").forEach(b=>b.addEventListener("click", ()=>openCostModal(b.dataset.id)));
   });
@@ -4869,6 +5046,12 @@ function wintertuinSummary(){
   const fs = wt.map(recipeFinance);
   const complete = fs.filter(f=>f.complete && f.portions && f.sellIncl).length;
   return { count: wt.length, complete, todo: wt.length - complete };
+}
+function financeHeroBtnHTML(){
+  const s = wintertuinSummary();
+  return `<button type="button" class="hero-alarm hero-fin" id="financeHeroBtn" aria-label="Calculatie" title="Calculatie">
+    <span class="fin-euro">€</span>${s.todo > 0 ? `<span class="fin-badge">${s.todo}</span>` : ""}
+  </button>`;
 }
 function financeTileHTML(){
   const s = wintertuinSummary();
@@ -5007,9 +5190,9 @@ function renderCalcPrices(){
       <button type="button" class="cm-toggle" id="missToggle">
         <b>Nog te koppelen: ${missing.length}</b><small>${onlyWt ? "ingrediënten uit Wintertuin-gerechten" : "ingrediënten zonder bruikbare prijs"}</small><span>${calcUI.showMissing ? "▾" : "▸"}</span>
       </button>
-      ${calcUI.showMissing ? `<div class="miss-list">${missing.slice(0, 40).map((m,i)=>`<div class="miss-item" data-unit="${m.unit}">
+      ${calcUI.showMissing ? `<div class="miss-bulk"><button type="button" class="solid-btn" id="bulkLinkBtn">Koppel automatisch</button><span>Maakt een voorstel voor alles; jij vinkt aan wat klopt.</span></div><div class="miss-list">${missing.slice(0, 40).map((m,i)=>`<div class="miss-item" data-unit="${m.unit}">
         <div class="miss-head"><b>${escHtml(m.name)}</b><small>${m.recipes.size} recept${m.recipes.size===1?"":"en"}${m.reason === "unit" ? " · prijs in andere eenheid" : ""}</small></div>
-        ${fixerHTML(m.name, m.unit, null, "m"+i)}
+        ${fixerHTML(m.name, m.unit, null, "m"+i, m.recipes)}
       </div>`).join("")}</div>` : ""}
     </div>` : `<div class="cost-coverage ok">Alle ingrediënten${onlyWt ? " van je Wintertuin-gerechten" : ""} hebben een prijs.</div>`}
 
@@ -5032,7 +5215,7 @@ function renderCalcPrices(){
         const open = calcUI.openPrice === key;
         return `<div class="calc-row price ${open ? "open" : ""}">
           <button type="button" class="calc-open" data-pk="${escHtml(key)}">
-            <span class="cr-name"><b>${escHtml(e.name || key)}</b><small>${escHtml(e.supplier || "")}${(e.options||[]).length > 1 ? ` · ${e.options.length} opties` : ""}${age != null ? ` · ${age === 0 ? "vandaag" : age + " d"}` : ""}${age != null && age > 90 ? " ⚠︎" : ""}</small></span>
+            <span class="cr-name"><b>${escHtml(prettyName(e.name || key))}</b><small>${escHtml(e.supplier || "")}${(e.options||[]).length > 1 ? ` · ${e.options.length} opties` : ""}${age != null ? ` · ${age === 0 ? "vandaag" : age + " d"}` : ""}${age != null && age > 90 ? " ⚠︎" : ""}</small></span>
             <span class="cr-v" data-l="Prijs">${eur(d.val)}/${d.unit}</span>
             <span class="cr-v" data-l="Rend.">${e.yieldPct && e.yieldPct < 100 ? e.yieldPct + "%" : "100%"}</span>
             <span class="cr-v" data-l="Bruikbaar">${eur(u.val)}/${u.unit}</span>
@@ -5047,6 +5230,8 @@ function renderCalcPrices(){
 
   const after = (msg)=>{ renderCalcPrices(); if(msg) showToast(msg); };
   wireFixers(inner, null, after);
+  const bl = document.getElementById("bulkLinkBtn");
+  if(bl) bl.addEventListener("click", ()=>openBulkLink(missing));
   const mt = document.getElementById("missToggle");
   if(mt) mt.addEventListener("click", ()=>{ calcUI.showMissing = !calcUI.showMissing; renderCalcPrices(); });
   const pq = document.getElementById("priceQ");
