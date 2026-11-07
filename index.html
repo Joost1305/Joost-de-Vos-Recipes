@@ -634,6 +634,15 @@
     body.mode-detail .photo-wrap{height:280px;}
     body.mode-detail .float-bar{bottom:calc(92px + env(safe-area-inset-bottom));}
   }
+
+  /* ===== Readability fixes for the bottom bars ===== */
+  .tabbar{background:rgba(255,255,255,.97);}
+  .detail-bar{background:#fff;box-shadow:0 -4px 18px rgba(60,40,10,.10);gap:4px;padding-left:8px;padding-right:8px;overflow:hidden;}
+  .db-scale{flex:1 1 0;min-width:0;gap:2px;padding:3px;}
+  .db-scale button{width:38px;height:38px;flex-shrink:0;}
+  .db-scale span{min-width:0;flex:1;text-align:center;font-size:15px;}
+  .db-btn{flex:0 0 auto;min-width:56px;max-width:96px;padding:5px 4px;}
+  .db-btn span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
 </style>
 </head>
 <body>
