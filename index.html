@@ -643,6 +643,13 @@
   .db-scale span{min-width:0;flex:1;text-align:center;font-size:15px;}
   .db-btn{flex:0 0 auto;min-width:56px;max-width:96px;padding:5px 4px;}
   .db-btn span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
+
+  /* ===== Fox logo ===== */
+  .brand-fox{width:36px;height:36px;border-radius:50%;object-fit:cover;background:#fff;border:1px solid var(--border);flex-shrink:0;}
+  .hero-fox{position:absolute;top:16px;right:16px;width:58px;height:58px;border-radius:50%;object-fit:cover;background:#fff;border:2px solid rgba(255,255,255,.85);z-index:1;box-shadow:0 2px 10px rgba(0,0,0,.25);}
+  .hero-head{padding-right:68px;}
+  .photo-wrap .photo-empty{display:grid;place-items:center;}
+  .photo-wrap .fox-empty{width:120px;height:120px;max-width:120px;border-radius:50%;object-fit:cover;background:#fff;opacity:.95;box-shadow:0 2px 12px rgba(60,40,10,.12);}
 </style>
 </head>
 <body>
@@ -651,7 +658,7 @@
   <div class="header-inner">
     <div class="brand">
       <button class="hdr-back hidden" id="hdrBack" aria-label="Terug naar home"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C97C3D" stroke-width="2"><path d="M12 2c-3 3-6 6-6 11a6 6 0 0 0 12 0c0-5-3-8-6-11z"/></svg>
+      <img class="brand-fox" id="brandFox" alt="" width="36" height="36">
       <h1 class="font-display"><span class="brand-long">Joost de Vos Recipe Folder</span><span class="brand-short">Bakboek</span></h1>
     </div>
     <button class="pill-btn" id="headerNewBtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Nieuw</button>
@@ -1639,6 +1646,8 @@ document.getElementById("headerNewBtn").addEventListener("click", ()=>openEditor
 // Render
 // ---------------------------------------------------------------------------
 let listViewMode = (()=>{ try{ return localStorage.getItem("bakboek_listview2") || "grid"; }catch(e){ return "grid"; } })();
+const FOX_SRC = (document.querySelector('link[rel="apple-touch-icon"]') || {}).href || "";
+document.getElementById("brandFox").src = FOX_SRC;
 function greetingText(){
   const h = new Date().getHours();
   return (h < 12 ? "Goedemorgen" : h < 18 ? "Goedemiddag" : "Goedenavond") + ", Joost";
@@ -1647,7 +1656,8 @@ function renderHeroHTML(){
   const date = new Date().toLocaleDateString("nl-NL", { weekday:"long", day:"numeric", month:"long", year:"numeric" });
   const n = (typeof bakeSelection !== "undefined") ? bakeSelection.size : 0;
   return `<div class="hero">
-    <div>
+    <img class="hero-fox" src="${FOX_SRC}" alt="">
+    <div class="hero-head">
       <h2 class="hero-greet font-display">${greetingText()}</h2>
       <div class="hero-date">${date}</div>
     </div>
@@ -1840,7 +1850,7 @@ function renderDetailInner(){
   el.innerHTML = `
     ${backBtn.replace('class="mobile-back-btn"', 'class="mobile-back-btn" style="padding:14px 20px 0;"')}
     <div class="photo-wrap">
-      ${photo ? `<img src="${photo}">` : `<div class="photo-empty">${ICONS.wheat}</div>`}
+      ${photo ? `<img src="${photo}">` : `<div class="photo-empty"><img class="fox-empty" src="${FOX_SRC}" alt=""></div>`}
       <div class="photo-actions">
         ${photo ? `<button class="icon-btn" id="removePhoto" title="Foto verwijderen">${ICONS.x}</button>` : `
         <button class="icon-btn" id="uploadPhoto" title="Foto uploaden">${ICONS.upload}</button>
