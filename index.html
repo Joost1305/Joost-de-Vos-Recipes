@@ -4549,10 +4549,15 @@ async function importPriceExcel(file){
     const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { header:1, defval:null });
     // Row 0/1 are section + column headers (per the Apicbase export format); data starts at row 2.
     const dataRows = rows.slice(2);
+    // Find columns by their header; Apicbase adds columns now and then. Fall back to the old layout.
+    const head = (rows[1] || []).map(h=>String(h == null ? "" : h).trim().toLowerCase());
+    const col = (label, fallback)=>{ const i = head.indexOf(label); return i === -1 ? fallback : i; };
+    const C = { name:col("name",1), qty:col("quantity",2), unit:col("unit",3), supplier:col("supplier",9),
+                price:col("price",12), perPack:col("price per pack",13), priceUnit:col("price unit",14) };
 
     const prices = {};
     dataRows.forEach(r=>{
-      const name = r[1], qty = r[2], unit = r[3], supplier = r[9], price = r[12], pricePerPack = r[13], priceUnit = r[14];
+      const name = r[C.name], qty = r[C.qty], unit = r[C.unit], supplier = r[C.supplier], price = r[C.price], pricePerPack = r[C.perPack], priceUnit = r[C.priceUnit];
       if(!name || price == null) return;
       const priceNum = parseNumLoose(price);
       if(priceNum == null) return;
