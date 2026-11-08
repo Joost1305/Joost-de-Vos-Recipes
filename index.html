@@ -390,9 +390,9 @@
 
   /* recipe editor */
   .note-panel{max-width:480px;}
-  #editorOverlay, #weblinkOverlay, #settingsOverlay, #pickOverlay, #pdfReviewOverlay, #pinOverlay, #costOverlay, #werkschemaOverlay{position:fixed;inset:0;background:rgba(15,22,16,.55);z-index:70;display:none;align-items:flex-end;justify-content:center;}
-  #editorOverlay.show, #weblinkOverlay.show, #settingsOverlay.show, #pickOverlay.show, #pdfReviewOverlay.show, #pinOverlay.show, #costOverlay.show, #werkschemaOverlay.show{display:flex;}
-  @media(min-width:640px){ #editorOverlay, #weblinkOverlay, #settingsOverlay, #pickOverlay, #pdfReviewOverlay, #pinOverlay, #costOverlay, #werkschemaOverlay{align-items:center;} }
+  #editorOverlay, #weblinkOverlay, #settingsOverlay, #pickOverlay, #allergenOverlay, #pdfReviewOverlay, #pinOverlay, #costOverlay, #werkschemaOverlay{position:fixed;inset:0;background:rgba(15,22,16,.55);z-index:70;display:none;align-items:flex-end;justify-content:center;}
+  #editorOverlay.show, #weblinkOverlay.show, #settingsOverlay.show, #pickOverlay.show, #allergenOverlay.show, #pdfReviewOverlay.show, #pinOverlay.show, #costOverlay.show, #werkschemaOverlay.show{display:flex;}
+  @media(min-width:640px){ #editorOverlay, #weblinkOverlay, #settingsOverlay, #pickOverlay, #allergenOverlay, #pdfReviewOverlay, #pinOverlay, #costOverlay, #werkschemaOverlay{align-items:center;} }
   .cost-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--border);font-size:13.5px;}
   .cost-row:first-child{border-top:none;}
   .cost-row .cost-name{flex:1;min-width:0;}
@@ -425,6 +425,26 @@
   .wt-toggle.on svg{opacity:1;}
   .wt-toggle.small{font-size:12px;padding:4px 10px;}
   .detail-badges{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .allergen-strip{display:flex;flex-wrap:wrap;align-items:center;gap:6px;width:100%;margin:26px 0 8px;padding:12px 0 0;border-top:1px solid var(--border);text-align:left;color:var(--muted);}
+  .al-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-right:4px;}
+  .al-chip{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;padding:3px 9px 3px 6px;border-radius:999px;background:var(--extras-bg);color:var(--muted2);}
+  .al-chip i{font-style:normal;font-size:12px;line-height:1;}
+  .al-none{font-size:12px;}
+  .al-more{margin-left:auto;font-size:14px;color:var(--muted);}
+  .al-group{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:6px 0 2px;}
+  .al-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
+  .al-ic{font-size:20px;width:28px;text-align:center;opacity:.45;}
+  .al-row.on .al-ic{opacity:1;}
+  .al-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
+  .al-txt b{font-size:14.5px;font-weight:500;}
+  .al-txt small{font-size:12px;color:var(--muted);}
+  .al-reset{font-size:12px;color:var(--fin);text-decoration:underline;}
+  .al-switch{width:42px;height:24px;border-radius:999px;background:var(--border2);position:relative;flex-shrink:0;transition:background .15s;}
+  .al-switch i{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:left .15s;}
+  .al-switch.on{background:var(--fin);}
+  .al-switch.on i{left:21px;}
+  .al-rest{margin-top:14px;}
+  .al-rest summary{font-size:13px;color:var(--muted2);cursor:pointer;padding:6px 0;}
   .tab-star{display:inline-flex;color:var(--fin);margin-right:5px;vertical-align:-1px;}
   .cat-tab.on .tab-star{color:#f0b89c;}
   .wt-dot{display:inline-flex;color:var(--fin);margin-right:5px;vertical-align:-1px;}
@@ -1113,6 +1133,16 @@
       <button class="btn btn-secondary" id="weblinkCancel">Annuleren</button>
       <button class="btn btn-primary" id="weblinkImportBtn">Importeer</button>
     </div>
+  </div>
+</div>
+
+<div id="allergenOverlay" class="no-print">
+  <div class="editor-panel note-panel">
+    <div class="editor-head">
+      <h3 id="allergenTitle">Allergenen</h3>
+      <button id="allergenClose" class="icon-btn-outline" title="Sluiten">✕</button>
+    </div>
+    <div class="editor-body" id="allergenBody"></div>
   </div>
 </div>
 
@@ -2374,6 +2404,7 @@ function renderDetailInner(){
         </div>`;
       })()}
       ${renderGalleryHTML(r)}
+      ${allergenStripHTML(r)}
     </div>
   `;
 
@@ -2402,6 +2433,7 @@ function renderDetailInner(){
   });
   document.getElementById("listToggle").addEventListener("click", ()=>toggleList(r.id));
   document.getElementById("editRecipe").addEventListener("click", ()=>openEditor(r.id));
+  document.getElementById("allergenStrip").addEventListener("click", ()=>openAllergenSheet(r.id));
   document.getElementById("showCostBtn").addEventListener("click", ()=>openCostModal(r.id));
   document.getElementById("printRecipe").addEventListener("click", ()=>shareRecipeAsPDF(r.id));
   const addAttBtn = document.getElementById("addAttachment");
@@ -5496,6 +5528,154 @@ function wirePriceEditors(root, after){
     });
   });
 }
+
+// ---------------------------------------------------------------------------
+// Allergenen (de 14 EU-allergenen), afgeleid uit ingrediëntnamen, gekoppelde
+// producten en basisrecepten. Per recept te corrigeren. Indicatie, geen garantie.
+// ---------------------------------------------------------------------------
+const ALLERGENS = [
+  { key:"gluten",  short:"Gluten",   label:"Glutenbevattende granen", icon:"🌾" },
+  { key:"schaal",  short:"Schaal",   label:"Schaaldieren",            icon:"🦐" },
+  { key:"ei",      short:"Ei",       label:"Ei",                      icon:"🥚" },
+  { key:"vis",     short:"Vis",      label:"Vis",                     icon:"🐟" },
+  { key:"pinda",   short:"Pinda",    label:"Pinda's",                 icon:"🥜" },
+  { key:"soja",    short:"Soja",     label:"Soja",                    icon:"🫘" },
+  { key:"melk",    short:"Melk",     label:"Melk (incl. lactose)",    icon:"🥛" },
+  { key:"noten",   short:"Noten",    label:"Noten",                   icon:"🌰" },
+  { key:"selderij",short:"Selderij", label:"Selderij",                icon:"🥬" },
+  { key:"mosterd", short:"Mosterd",  label:"Mosterd",                 icon:"🟡" },
+  { key:"sesam",   short:"Sesam",    label:"Sesamzaad",               icon:"⚪" },
+  { key:"sulfiet", short:"Sulfiet",  label:"Sulfiet (zwaveldioxide)", icon:"🍷" },
+  { key:"lupine",  short:"Lupine",   label:"Lupine",                  icon:"🌼" },
+  { key:"weekdier",short:"Weekdier", label:"Weekdieren",              icon:"🦪" },
+];
+const ALLERGEN_BY_KEY = Object.fromEntries(ALLERGENS.map(a=>[a.key, a]));
+// Patterns run on the lowercased, accent-free, English-translated name. Excludes are removed first.
+const ALLERGEN_RULES = {
+  gluten: { inc:/(tarwe|bloem|meel|spelt|rogge|gerst|haver|kamut|khorasan|emmer|griesmeel|semolina|couscous|bulgur|freekeh|pasta|spaghetti|tagliatelle|lasagne|macaroni|noedel|brood|baguette|focaccia|brioche|croissant|paneermeel|panko|seitan|mout|bier|desem|starter|levain|cracker|beschuit|biscuit|koek|cake|tortilla|wrap|pita|udon|ramen|orzo|gnocchi|sojasaus|ketjap|crouton|bladerdeeg|filodeeg|deeg|roux)/,
+           exc:/(glutenvrij|bloemkool|zonnebloem|maisbloem|maismeel|rijstbloem|rijstmeel|rijstnoedel|boekweit|aardappelmeel|aardappelzetmeel|amandelmeel|kokosmeel|kikkererwtenmeel|kastanjemeel|tapioca|maizena|meelworm|bloemen|eetbare bloem|vlierbloesem|vlierbloem|lindebloesem|oranjebloesem|bloemenhoning|bloemzout|fleur de sel|tamari)/ },
+  schaal: { inc:/(garnaal|garnalen|gamba|scampi|kreeft|krab|langoustine|langoestine|rivierkreeft|shrimp|prawn|lobster|crab|schaaldier)/ },
+  ei:     { inc:/(\bei\b|\beieren\b|eiwit|eidooier|eigeel|dooier|kippenei|eendenei|kwartelei|mayonaise|mayo\b|aioli|meringue|schuimpje|hollandaise|bearnaise)/, exc:/(eiwitpoeder plant|eiwitvrij)/ },
+  vis:    { inc:/(\bvis\b|vissaus|visfond|zalm|kabeljauw|tonijn|ansjovis|makreel|haring|forel|sardien|sardine|schelvis|zeebaars|dorade|heilbot|tarbot|kingfish|geelstaart|zeeduivel|snoekbaars|paling|pollak|koolvis|wijting|bonito|katsuobushi|dashi|kaviaar|viskuit|worcester|fish)/ },
+  pinda:  { inc:/(pinda|apennoot|satesaus|sate saus|peanut)/ },
+  soja:   { inc:/(soja|tofu|tempeh|edamame|miso|ketjap|tamari|sojalecithine|soy)/ },
+  melk:   { inc:/(melk|boter|\broom\b|slagroom|kookroom|zure room|roomkaas|roomijs|karnemelk|kaas|yoghurt|kwark|creme fraiche|mascarpone|ricotta|mozzarella|burrata|parmezaan|parmigiano|pecorino|gruyere|comte|feta|labneh|ghee|\bwei\b|weipoeder|lactose|caseine|milk|butter|cream|cheese|ganache|bechamel|custard|panna cotta|\bijs\b)/,
+           exc:/(kokosmelk|kokosroom|amandelmelk|havermelk|haverdrank|sojamelk|rijstmelk|notenmelk|cacaoboter|pindaboter|pindakaas|notenboter|amandelboter|sheaboter|plantaardige boter|roomboter plant|zonder melk|melkvrij|lactosevrij)/ },
+  noten:  { inc:/(amandel|hazelno|walno|pecan|cashew|pistache|macadamia|paranoot|paranoten|noten|\bnoot\b|praline|marsepein|frangipane|nougat|gianduja|nutella|dukkah|almond|hazelnut|walnut|pistachio)/,
+           exc:/(nootmuskaat|kokosnoot|kokos|muskaatnoot|pindanoot|aardnoot|notenvrij|tijgernoot|kastanje|pindanoten)/ },
+  selderij:{ inc:/(selderij|selder|knolselderij|bleekselderij|celeriac|celery|selderijzout|selderijzaad|lavas)/ },
+  mosterd:{ inc:/(mosterd|mustard|dijon)/ },
+  sesam:  { inc:/(sesam|tahin|tahini|gomasio|furikake|dukkah|za.?atar|sesame)/ },
+  sulfiet:{ inc:/(wijn|wijnazijn|balsamico|porto|\bport\b|sherry|madeira|marsala|vermout|cider|gedroogde abrikoos|gedroogde abrikozen|sulfiet|zwaveldioxide|verjus|wine)/, exc:/(wijnsteen|wijnruit|wijnbes)/ },
+  lupine: { inc:/(lupine|lupin)/ },
+  weekdier:{ inc:/(mossel|oester|inktvis|octopus|pijlinktvis|calamari|sepia|jakobsschelp|coquille|kokkel|venusschelp|scheermes|slak|escargot|wulk|oestersaus|mussel|oyster|squid|scallop|clam)/ },
+};
+function allergenText(name){
+  const base = (name||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9 ]+/g," ").replace(/\s+/g," ").trim();
+  return " " + base + " " + enToNl(base) + " ";
+}
+function detectAllergensInName(name){
+  const txt = allergenText(name);
+  const found = [];
+  ALLERGENS.forEach(a=>{
+    const rule = ALLERGEN_RULES[a.key];
+    const t = rule.exc ? txt.replace(new RegExp(rule.exc.source, "g"), " ") : txt;
+    if(rule.inc.test(t)) found.push(a.key);
+  });
+  return found;
+}
+// Map of allergen key -> list of ingredient names that cause it (through linked products and base recipes).
+function recipeAllergenSources(r, seen){
+  seen = seen || new Set([r.id]);
+  const map = {};
+  const add = (k, why)=>{ (map[k] = map[k] || []); if(!map[k].includes(why)) map[k].push(why); };
+  getAllIngredientsFlat(r).forEach(ing=>{
+    const nm = (ing.name||"").trim();
+    if(!nm) return;
+    const res = resolveIngredient(nm, r.id);
+    // A base recipe speaks for itself; otherwise go by the name.
+    if(!(res && res.kind === "recipe")) detectAllergensInName(nm).forEach(k=>add(k, nm));
+    if(res && res.kind === "price") detectAllergensInName(res.entry.name).forEach(k=>add(k, nm));
+    if(res && res.kind === "recipe" && !seen.has(res.recipe.id)){
+      const sub = recipeAllergenSources(res.recipe, new Set([...seen, res.recipe.id]));
+      Object.entries(sub).forEach(([k, list])=>{
+        if(isAllergenOn(res.recipe, k, sub)) add(k, `${nm} (basisrecept)`);
+      });
+    }
+  });
+  return map;
+}
+function isAllergenOn(r, key, sources){
+  const fix = r.allergenFix || {};
+  if(fix[key] === true) return true;
+  if(fix[key] === false) return false;
+  return !!(sources[key] && sources[key].length);
+}
+function recipeAllergens(r){
+  const src = recipeAllergenSources(r);
+  return ALLERGENS.filter(a=>isAllergenOn(r, a.key, src)).map(a=>a.key);
+}
+
+function allergenStripHTML(r){
+  const keys = recipeAllergens(r);
+  return `<button type="button" class="allergen-strip" id="allergenStrip" aria-label="Allergenen">
+    <span class="al-label">Allergenen</span>
+    ${keys.length ? keys.map(k=>`<span class="al-chip" title="${ALLERGEN_BY_KEY[k].label}"><i>${ALLERGEN_BY_KEY[k].icon}</i>${ALLERGEN_BY_KEY[k].short}</span>`).join("")
+      : `<span class="al-none">geen gevonden</span>`}
+    <span class="al-more">ⓘ</span>
+  </button>`;
+}
+
+function openAllergenSheet(recipeId){
+  const r = findRecipe(recipeId);
+  if(!r) return;
+  const src = recipeAllergenSources(r);
+  const fix = r.allergenFix || {};
+  const rows = ALLERGENS.map(a=>{
+    const on = isAllergenOn(r, a.key, src);
+    const auto = !!(src[a.key] && src[a.key].length);
+    const changed = fix[a.key] === true || fix[a.key] === false;
+    return { a, on, auto, changed, why: src[a.key] || [] };
+  });
+  const present = rows.filter(x=>x.on), absent = rows.filter(x=>!x.on);
+  const rowHTML = (x)=>`<div class="al-row ${x.on ? "on" : ""}">
+    <span class="al-ic">${x.a.icon}</span>
+    <div class="al-txt"><b>${x.a.label}</b>
+      <small>${x.on ? (x.auto && x.why.length ? escHtml(x.why.join(", ")) : "handmatig toegevoegd")
+        : (x.auto ? `uitgezet, gevonden in ${escHtml(x.why.join(", "))}` : "")}${x.changed ? ` · <button type="button" class="al-reset" data-reset="${x.a.key}">automatisch</button>` : ""}</small></div>
+    <button type="button" class="al-switch ${x.on ? "on" : ""}" data-al="${x.a.key}" aria-label="${x.a.label}"><i></i></button>
+  </div>`;
+  document.getElementById("allergenBody").innerHTML = `
+    <p class="set-hint">Afgeleid uit de ingrediënten, gekoppelde producten en basisrecepten. Zet een allergeen aan of uit als het niet klopt; dat onthoudt het recept. Controleer samengestelde producten altijd op het etiket.</p>
+    ${present.length ? `<div class="al-group">Bevat</div>${present.map(rowHTML).join("")}` : `<p class="calc-empty">Geen allergenen gevonden.</p>`}
+    <details class="al-rest"><summary>Overige allergenen (${absent.length})</summary>${absent.map(rowHTML).join("")}</details>`;
+  const body = document.getElementById("allergenBody");
+  const save = async (key, val)=>{
+    const idx = state.recipes.findIndex(x=>x.id === recipeId);
+    if(idx < 0) return;
+    const f = { ...(state.recipes[idx].allergenFix || {}) };
+    if(val === null) delete f[key]; else f[key] = val;
+    state.recipes[idx].allergenFix = f;
+    await saveState();
+    const openRest = body.querySelector(".al-rest") && body.querySelector(".al-rest").open;
+    openAllergenSheet(recipeId);
+    if(openRest) body.querySelector(".al-rest").open = true;
+    if(state.selectedId === recipeId) renderDetail();
+  };
+  body.querySelectorAll("[data-al]").forEach(b=>b.addEventListener("click", ()=>{
+    const key = b.dataset.al;
+    const x = rows.find(y=>y.a.key === key);
+    const want = !x.on;
+    // Back to automatic when the switch lands on what detection already says.
+    save(key, want === x.auto ? null : want);
+  }));
+  body.querySelectorAll("[data-reset]").forEach(b=>b.addEventListener("click", ()=>save(b.dataset.reset, null)));
+  document.getElementById("allergenTitle").textContent = `Allergenen · ${r.title}`;
+  document.getElementById("allergenOverlay").classList.add("show");
+}
+function closeAllergenSheet(){ document.getElementById("allergenOverlay").classList.remove("show"); }
+document.getElementById("allergenClose").addEventListener("click", closeAllergenSheet);
+document.getElementById("allergenOverlay").addEventListener("click", (e)=>{ if(e.target.id === "allergenOverlay") closeAllergenSheet(); });
 
 // --- Translate (EN -> NL), free unofficial Google endpoint with a proxy fallback ---
 async function translateGoogle(text, targetLang){
