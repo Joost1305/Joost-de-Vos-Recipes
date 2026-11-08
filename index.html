@@ -967,7 +967,6 @@
     </div>
     <button class="pill-btn" id="headerNewBtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Nieuw</button>
     <div class="header-tools">
-      <button class="header-nav-btn" id="navRecipesBtn">Recepten</button>
       <button class="header-nav-btn" id="navInspirationBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M12 3l1.8 4.7L18.5 9.5 13.8 11.3 12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg> Inspiratie</button>
       <button class="header-nav-btn" id="navCalcBtn"><span class="nav-euro">€</span> Calculatie</button>
       <button class="header-nav-btn" id="navBakeBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12c0-3 3-6 8-6s8 3 8 6v1a2 2 0 0 1-2 2v3a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1v-3a2 2 0 0 1-2-2z"/><path d="M9 10l1.5 3M13 10l1.5 3"/></svg> Bakschema</button>
@@ -2031,7 +2030,6 @@ function updateBottomBars(){
     lastY = y;
   }, { passive:true });
 })();
-document.getElementById("navRecipesBtn").addEventListener("click", goHome);
 (function(){
   const b = document.getElementById("brandHome");
   b.addEventListener("click", (e)=>{ if(e.target.closest("#hdrBack")) return; goHome(); });
