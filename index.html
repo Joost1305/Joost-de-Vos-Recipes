@@ -875,6 +875,20 @@
   .hero .general-timer-card.is-open{margin-top:10px;padding:10px 12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);}
   .hero .general-timer-card:not(.is-open){display:none;}
   .hero::after{display:none;}
+
+  /* recipe editor: no sideways wiggle, no iOS zoom, fox orange, % only for bread */
+  .editor-panel{--crust:#d2622a;--crust-h:#e0763d;--border2:#e3d2c4;}
+  .editor-panel, .editor-body{overflow-x:hidden;max-width:100%;overscroll-behavior:contain;}
+  .editor-body{touch-action:pan-y;}
+  .editor-panel .ing-row{grid-template-columns:16px minmax(0,1fr) 58px 52px 46px 24px;gap:4px;}
+  .editor-panel.no-pct .ing-row{grid-template-columns:16px minmax(0,1fr) 62px 56px 24px;}
+  .editor-panel.no-pct .ing-pct{display:none;}
+  .editor-panel .ing-row > *{min-width:0;}
+  .editor-panel .ing-row input, .editor-panel .ing-row select{width:100%;min-width:0;padding:8px 6px;}
+  .editor-panel .field input, .editor-panel .field textarea, .editor-panel select{max-width:100%;}
+  @media (max-width:760px){
+    .editor-panel input, .editor-panel select, .editor-panel textarea{font-size:16px !important;}
+  }
 </style>
 </head>
 <body>
@@ -3271,6 +3285,12 @@ function populateCategorySelect(selected){
   sel.value = selected && cats.includes(selected) ? selected : cats[0];
   document.getElementById("editCategoryNew").classList.add("hidden");
   document.getElementById("editCategoryNew").value = "";
+  syncPctVisibility();
+}
+function syncPctVisibility(){
+  const sel = document.getElementById("editCategory");
+  const panel = sel && sel.closest(".editor-panel");
+  if(panel) panel.classList.toggle("no-pct", sel.value !== "Brood");
 }
 
 function populateIngredientDatalist(){
@@ -3611,6 +3631,7 @@ document.getElementById("editYieldUnit").addEventListener("change", (e)=>{
   if(e.target.value === "__other__") otherInput.focus();
 });
 document.getElementById("editCategory").addEventListener("change", (e)=>{
+  syncPctVisibility();
   document.getElementById("editCategoryNew").classList.toggle("hidden", e.target.value !== "__new__");
   if(e.target.value === "__new__") document.getElementById("editCategoryNew").focus();
 
