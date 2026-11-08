@@ -903,6 +903,15 @@
     body.mode-detail main{padding-bottom:calc(60px + env(safe-area-inset-bottom));}
     body.mode-detail .float-bar{bottom:calc(58px + env(safe-area-inset-bottom));}
   }
+
+  .ep-main{position:relative;height:150px;border-radius:12px;overflow:hidden;background:var(--photo-bg);display:flex;align-items:center;justify-content:center;}
+  .ep-main img{width:100%;height:100%;object-fit:cover;}
+  .ep-none{color:var(--muted);font-size:13px;}
+  .ep-actions{display:flex;gap:8px;}
+  .ep-main .ep-actions{position:absolute;right:8px;bottom:8px;}
+  .ep-main .ep-actions .icon-btn-outline{background:rgba(255,255,255,.92);}
+  .ep-del{color:var(--toast);}
+  .ep-grid{grid-template-columns:repeat(auto-fill,minmax(96px,1fr));}
 </style>
 </head>
 <body>
@@ -1132,6 +1141,7 @@
       </div>
     </div>
     <div class="editor-body">
+      <div id="editPhotos"></div>
       <div class="field">
         <label for="editTitle">Naam van het recept</label>
         <input type="text" id="editTitle" placeholder="Bijv. Desembrood met walnoten">
@@ -2212,12 +2222,6 @@ function renderDetailInner(){
     ${backBtn.replace('class="mobile-back-btn"', 'class="mobile-back-btn" style="padding:14px 20px 0;"')}
     <div class="photo-wrap">
       ${photo ? `<img src="${photo}">` : `<div class="photo-empty"><img class="fox-empty" src="${FOX_SRC}" alt=""></div>`}
-      <div class="photo-actions">
-        ${photo ? `<button class="icon-btn" id="removePhoto" title="Foto verwijderen">${ICONS.x}</button>` : `
-        <button class="icon-btn" id="uploadPhoto" title="Foto uploaden">${ICONS.upload}</button>
-        <button class="icon-btn" id="takePhoto" title="Foto maken">${ICONS.camera}</button>
-        `}
-      </div>
     </div>
     <div class="detail-body">
       <div class="detail-head">
@@ -3379,6 +3383,7 @@ function addGroupBlock(groupData){
 
 function openEditor(id){
   editingId = id;
+  renderEditorPhotos();
   pdfReviewEditingIndex = null;
   populateIngredientDatalist();
   document.getElementById("ingRows").innerHTML = "";
@@ -3729,20 +3734,70 @@ document.getElementById("closePrint").addEventListener("click", ()=>{
 });
 function renderGalleryHTML(r){
   const list = state.gallery[r.id] || [];
+  if(!list.length) return "";
   return `<div class="gallery-section">
-    <div class="gallery-head">
-      <span>Foto's</span>
-      <div class="gallery-actions">
-        <button class="icon-btn-outline" id="galleryUpload" title="Foto's toevoegen">${ICONS.upload}</button>
-        <button class="icon-btn-outline" id="galleryCamera" title="Foto maken">${ICONS.camera}</button>
+    <div class="gallery-head"><span>Foto's</span></div>
+    <div class="gallery-grid">${list.map(u=>`
+      <div class="gallery-item"><a href="${u}" target="_blank" rel="noopener"><img src="${u}" loading="lazy"></a></div>`).join("")}</div>
+  </div>`;
+}
+// Photos can only be added or removed from the recipe editor.
+function renderEditorPhotos(){
+  const box = document.getElementById("editPhotos");
+  if(!box) return;
+  const id = editingId;
+  if(!id){
+    box.innerHTML = `<div class="field"><label>Foto's</label><div class="gallery-empty">Sla het recept eerst op, daarna kun je hier foto's toevoegen.</div></div>`;
+    return;
+  }
+  const main = state.photos[id];
+  const list = state.gallery[id] || [];
+  box.innerHTML = `
+    <div class="field">
+      <label>Hoofdfoto (bovenaan het recept)</label>
+      <div class="ep-main">
+        ${main ? `<img src="${main}" alt="">` : `<div class="ep-none">Nog geen foto</div>`}
+        <div class="ep-actions">
+          <button type="button" class="icon-btn-outline" id="epUpload" title="Foto kiezen">${ICONS.upload}</button>
+          <button type="button" class="icon-btn-outline" id="epCamera" title="Foto maken">${ICONS.camera}</button>
+          ${main ? `<button type="button" class="icon-btn-outline ep-del" id="epRemove" title="Foto verwijderen">${ICONS.x}</button>` : ""}
+        </div>
       </div>
     </div>
-    ${list.length ? `<div class="gallery-grid">${list.map((u,i)=>`
-      <div class="gallery-item">
-        <a href="${u}" target="_blank" rel="noopener"><img src="${u}" loading="lazy"></a>
-        <button class="gallery-del" data-i="${i}" title="Foto verwijderen">${ICONS.x}</button>
-      </div>`).join("")}</div>` : `<div class="gallery-empty">Nog geen extra foto's, bijvoorbeeld van de bereiding.</div>`}
-  </div>`;
+    <div class="field">
+      <label>Extra foto's (onderaan het recept)</label>
+      <div class="gallery-grid ep-grid">${list.map((u,i)=>`
+        <div class="gallery-item"><img src="${u}" loading="lazy"><button type="button" class="gallery-del" data-i="${i}" title="Foto verwijderen">${ICONS.x}</button></div>`).join("")}</div>
+      <div class="ep-actions" style="margin-top:8px;">
+        <button type="button" class="icon-btn-outline" id="epGalUpload" title="Foto's toevoegen">${ICONS.upload}</button>
+        <button type="button" class="icon-btn-outline" id="epGalCamera" title="Foto maken">${ICONS.camera}</button>
+      </div>
+    </div>`;
+  const pick = (inputId)=>()=>{ const inp = document.getElementById(inputId); inp.dataset.forId = id; inp.click(); };
+  box.querySelector("#epUpload").addEventListener("click", pick("fileInput"));
+  box.querySelector("#epCamera").addEventListener("click", pick("cameraInput"));
+  box.querySelector("#epGalUpload").addEventListener("click", pick("galleryInput"));
+  box.querySelector("#epGalCamera").addEventListener("click", pick("galleryCameraInput"));
+  const rm = box.querySelector("#epRemove");
+  if(rm) rm.addEventListener("click", ()=>{
+    if(!confirm("Hoofdfoto verwijderen?")) return;
+    const path = storagePathFromUrl(state.photos[id]);
+    delete state.photos[id];
+    saveState();
+    if(path) deleteFromStorage(path);
+    renderSidebar(); renderDetail(); renderEditorPhotos();
+  });
+  box.querySelectorAll(".gallery-del").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      if(!confirm("Deze foto verwijderen?")) return;
+      const l = state.gallery[id] || [];
+      const [removed] = l.splice(+btn.dataset.i, 1);
+      if(!l.length) delete state.gallery[id];
+      saveState();
+      if(removed) deleteFromStorage(storagePathFromUrl(removed));
+      renderDetail(); renderEditorPhotos();
+    });
+  });
 }
 function wireGallery(r){
   const up = document.getElementById("galleryUpload");
@@ -3784,6 +3839,7 @@ async function handleGalleryInput(e){
   }
   await saveState();
   renderDetail();
+  renderEditorPhotos();
   showToast(failed ? `${failed} foto('s) konden niet worden geüpload.` : "Foto toegevoegd.");
 }
 document.getElementById("galleryInput").addEventListener("change", handleGalleryInput);
@@ -3805,6 +3861,7 @@ async function handlePhotoInput(e){
     if(oldPath) deleteFromStorage(oldPath);
     renderSidebar();
     renderDetail();
+    renderEditorPhotos();
   }catch(err){
     console.error(err);
     showToast("Foto kon niet worden geüpload.");
