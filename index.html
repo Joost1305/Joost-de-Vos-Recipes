@@ -912,6 +912,10 @@
   .ep-main .ep-actions .icon-btn-outline{background:rgba(255,255,255,.92);}
   .ep-del{color:var(--toast);}
   .ep-grid{grid-template-columns:repeat(auto-fill,minmax(96px,1fr));}
+
+  .detail-kicker{font-size:11.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted2);margin-bottom:4px;display:flex;align-items:center;gap:10px;}
+  .kicker-wt{display:inline-flex;align-items:center;gap:4px;color:var(--crust);letter-spacing:.04em;}
+  .kicker-wt svg{width:12px;height:12px;}
 </style>
 </head>
 <body>
@@ -1896,6 +1900,12 @@ function openRecipeMoreSheet(r){
     { icon:ICONS.euro, label:"Calculatie", fn:()=>openCostModal(r.id) },
     { icon:WT_ICON, label: r.wintertuin ? "Van Wintertuin-kaart halen" : "Op Wintertuin-kaart zetten", fn:()=>toggleWintertuin(r.id) },
     { icon:ICONS.printer, label:"Download als PDF", fn:()=>shareRecipeAsPDF(r.id) },
+    { icon:ICONS.filePdf, label: state.attachments[r.id] ? "Bijgevoegde PDF vervangen" : "PDF bijvoegen (bijv. gescand origineel)", fn:()=>{ const inp=document.getElementById("attachmentInput"); inp.dataset.forId=r.id; inp.click(); } },
+    ...(state.attachments[r.id] ? [{ icon:ICONS.x, label:"Bijgevoegde PDF verwijderen", fn:()=>{
+      if(!confirm("Bijgevoegde PDF verwijderen?")) return;
+      const path = storagePathFromUrl(state.attachments[r.id]?.url);
+      delete state.attachments[r.id]; saveState(); if(path) deleteFromStorage(path); renderDetail();
+    } }] : []),
     { icon:ICONS.scale || ICONS.edit, label: state.useLargeUnits ? "Toon in g en ml" : "Toon in kg en l", fn:()=>toggleUnits(!state.useLargeUnits) },
   ]}]);
 }
@@ -2226,7 +2236,7 @@ function renderDetailInner(){
     <div class="detail-body">
       <div class="detail-head">
         <div>
-          <div class="detail-badges"><div class="category-badge">${r.category || "Overig"}</div><button type="button" class="wt-toggle small ${r.wintertuin ? "on" : ""}" id="wtToggle">${WT_ICON} Wintertuin</button></div>
+          <div class="detail-kicker">${r.category || "Overig"}${r.wintertuin ? ` <span class="kicker-wt">${WT_ICON} Wintertuin</span>` : ""}</div>
           <h2 class="detail-title font-display">${r.title}</h2>
           <div class="detail-sub">${r.sub || ""}</div>
           ${r.origin ? `<div class="detail-origin">Bron: ${/^https?:\/\//.test(r.origin) ? `<a href="${r.origin}" target="_blank" rel="noopener">${r.origin}</a>` : r.origin}</div>` : ""}
@@ -2239,16 +2249,11 @@ function renderDetailInner(){
         </div>
       </div>
 
-      <div class="attachment-row">
-        ${state.attachments[r.id] ? `
+      ${state.attachments[r.id] ? `<div class="attachment-row">
           <a class="attachment-chip" href="${state.attachments[r.id].url}" download="${state.attachments[r.id].name}" target="_blank">
             ${ICONS.filePdf} <span>${state.attachments[r.id].name}</span>
           </a>
-          <button class="icon-btn-outline" id="removeAttachment" title="Bijlage verwijderen">${ICONS.x}</button>
-        ` : `
-          <button class="attachment-add" id="addAttachment">${ICONS.filePdf} + PDF bijvoegen (bijv. gescand origineel)</button>
-        `}
-      </div>
+      </div>` : ""}
 
       ${crustDividerSVG()}
 
@@ -2369,7 +2374,6 @@ function renderDetailInner(){
   document.getElementById("listToggle").addEventListener("click", ()=>toggleList(r.id));
   document.getElementById("editRecipe").addEventListener("click", ()=>openEditor(r.id));
   document.getElementById("showCostBtn").addEventListener("click", ()=>openCostModal(r.id));
-  document.getElementById("wtToggle").addEventListener("click", ()=>toggleWintertuin(r.id));
   document.getElementById("printRecipe").addEventListener("click", ()=>shareRecipeAsPDF(r.id));
   const addAttBtn = document.getElementById("addAttachment");
   if(addAttBtn) addAttBtn.addEventListener("click", ()=>{
