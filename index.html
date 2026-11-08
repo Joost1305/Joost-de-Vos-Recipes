@@ -945,6 +945,14 @@
   .brand[role=button]{cursor:pointer;}
   #navRecipesBtn{font-weight:600;}
   @media (max-width:760px){ #navRecipesBtn{display:none;} }
+
+  /* desktop: list and recipe scroll independently */
+  @media (min-width:761px){
+    main{padding-bottom:20px;}
+    #viewRecipes.layout{height:calc(100vh - var(--hdr, 160px) - 40px);align-items:stretch;}
+    #viewRecipes .sidebar{overflow-y:auto;overscroll-behavior:contain;padding:2px 6px 24px 2px;margin:0 -6px 0 -2px;min-height:0;}
+    #viewRecipes .detail{overflow-y:auto;overscroll-behavior:contain;min-height:0;max-height:100%;}
+  }
 </style>
 </head>
 <body>
@@ -2204,7 +2212,18 @@ function updateMobileViewClass(){
   if(layout) layout.classList.toggle("mobile-detail", state.mobileView === "detail");
   if(typeof updateBottomBars === "function") updateBottomBars();
 }
+let __lastDetailId = null;
+function setHeaderHeightVar(){
+  const h = document.querySelector("header");
+  if(h) document.documentElement.style.setProperty("--hdr", h.offsetHeight + "px");
+}
+window.addEventListener("resize", setHeaderHeightVar);
 function renderDetail(){
+  setHeaderHeightVar();
+  if(state.selectedId !== __lastDetailId){
+    __lastDetailId = state.selectedId;
+    const d = document.getElementById("detail"); if(d) d.scrollTop = 0;
+  }
   if(state.mobileView === "detail" || window.innerWidth > 760) pushRecent(state.selectedId);
   renderDetailInner();
   updateBottomBars();
