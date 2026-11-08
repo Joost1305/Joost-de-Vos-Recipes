@@ -889,6 +889,20 @@
   @media (max-width:760px){
     .editor-panel input, .editor-panel select, .editor-panel textarea{font-size:16px !important;}
   }
+
+  /* subtle recipe bar: icons only, slim, hides while scrolling down; scale controls only in the bar on phones */
+  @media (max-width:760px){
+    .scale-row{display:none;}
+    .detail-bar{height:auto;padding:5px 10px calc(5px + env(safe-area-inset-bottom));gap:2px;box-shadow:0 -1px 0 var(--border);background:rgba(255,255,255,.94);transition:transform .22s ease;justify-content:space-between;}
+    .detail-bar.scroll-hide{transform:translateY(110%);}
+    .db-scale{flex:0 0 auto;background:none;padding:0;gap:0;}
+    .db-scale button{width:34px;height:34px;background:var(--extras-bg);box-shadow:none;}
+    .db-scale span{flex:none;min-width:46px;font-size:14px;color:var(--ink);}
+    .db-btn{min-width:44px;width:44px;height:38px;padding:0;justify-content:center;flex:0 0 auto;}
+    .db-btn svg{width:22px;height:22px;}
+    body.mode-detail main{padding-bottom:calc(60px + env(safe-area-inset-bottom));}
+    body.mode-detail .float-bar{bottom:calc(58px + env(safe-area-inset-bottom));}
+  }
 </style>
 </head>
 <body>
@@ -1872,6 +1886,7 @@ function openRecipeMoreSheet(r){
     { icon:ICONS.euro, label:"Calculatie", fn:()=>openCostModal(r.id) },
     { icon:WT_ICON, label: r.wintertuin ? "Van Wintertuin-kaart halen" : "Op Wintertuin-kaart zetten", fn:()=>toggleWintertuin(r.id) },
     { icon:ICONS.printer, label:"Download als PDF", fn:()=>shareRecipeAsPDF(r.id) },
+    { icon:ICONS.scale || ICONS.edit, label: state.useLargeUnits ? "Toon in g en ml" : "Toon in kg en l", fn:()=>toggleUnits(!state.useLargeUnits) },
   ]}]);
 }
 function openBakkersschemaPage(){
@@ -1905,13 +1920,14 @@ function renderDetailBar(r){
   bar.innerHTML = `
     <div class="db-scale">
       <button id="dbMinus" aria-label="Kleiner">${ICONS.minus}</button>
-      <span class="font-mono">${fmt(scale)}×</span>
+      <span class="font-mono" id="dbVal" title="Terug naar 1×">${fmt(scale)}×</span>
       <button id="dbPlus" aria-label="Groter">${ICONS.plus}</button>
     </div>
-    <button class="db-btn ${onList ? "on" : ""}" id="dbList" aria-label="Boodschappenlijst">${TAB_ICONS.cart}<span>${onList ? "Op lijst" : "Boodschappen"}</span></button>
-    <button class="db-btn" id="dbMore" aria-label="Meer">${TAB_ICONS.more}<span>Meer</span></button>`;
+    <button class="db-btn ${onList ? "on" : ""}" id="dbList" aria-label="Boodschappenlijst">${TAB_ICONS.cart}</button>
+    <button class="db-btn" id="dbMore" aria-label="Meer">${TAB_ICONS.more}</button>`;
   document.getElementById("dbMinus").addEventListener("click", ()=>setScale(r.id, getScale(r.id)-0.25));
   document.getElementById("dbPlus").addEventListener("click", ()=>setScale(r.id, getScale(r.id)+0.25));
+  document.getElementById("dbVal").addEventListener("click", ()=>setScale(r.id, 1));
   document.getElementById("dbList").addEventListener("click", ()=>toggleList(r.id));
   document.getElementById("dbMore").addEventListener("click", ()=>openRecipeMoreSheet(r));
 }
@@ -1934,6 +1950,17 @@ function updateBottomBars(){
   tab.querySelectorAll("button").forEach(b=>b.classList.toggle("on", b.dataset.tab === active));
   if(detailMode) renderDetailBar(r);
 }
+(function(){
+  let lastY = window.scrollY;
+  window.addEventListener("scroll", ()=>{
+    const bar = document.getElementById("detailBar");
+    if(!bar) return;
+    const y = window.scrollY, dy = y - lastY;
+    if(Math.abs(dy) < 6) return;
+    bar.classList.toggle("scroll-hide", dy > 0 && y > 120);
+    lastY = y;
+  }, { passive:true });
+})();
 document.getElementById("fabBack").addEventListener("click", goToMobileList);
 document.getElementById("hdrBack").addEventListener("click", goHome);
 document.getElementById("headerNewBtn").addEventListener("click", ()=>openEditor(null));
