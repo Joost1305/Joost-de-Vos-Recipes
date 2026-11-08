@@ -549,7 +549,10 @@
   .cm-grid input,.cm-grid select{width:100%;min-width:0;box-sizing:border-box;padding:10px;font-size:16px;border:1px solid var(--border2);border-radius:10px;background:#fff;color:var(--ink);}
   .cm-facts{display:flex;flex-direction:column;gap:4px;margin-top:8px;}
   .cm-facts div{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;}
-  .cm-facts b{font-family:'JetBrains Mono',monospace;}
+  .cm-facts b{font-family:'JetBrains Mono',monospace;text-align:right;}
+  .cm-facts b small{font-family:Inter,system-ui,sans-serif;font-weight:400;font-size:11.5px;color:var(--muted);}
+  .warn-note{color:#8a3a22;}
+  .cm-auto{float:right;font-size:12px;font-weight:600;text-transform:none;letter-spacing:0;color:#fff;background:var(--fin);padding:5px 11px;border-radius:999px;margin-top:-4px;}
   .calc-table .cm-edit{margin:0 14px 12px;}
   @media(min-width:760px){
     .cm-stats{grid-template-columns:repeat(4,minmax(0,1fr));}
@@ -4562,7 +4565,7 @@ async function importPriceExcel(file){
 // ---------------------------------------------------------------------------
 const EUR = new Intl.NumberFormat("nl-NL", { style:"currency", currency:"EUR" });
 function eur(n){ return n == null || isNaN(n) ? "–" : EUR.format(n); }
-function pct(n){ return n == null || isNaN(n) ? "–" : `${Math.round(n)}%`; }
+function pct(n){ return n == null || isNaN(n) ? "–" : n < 10 ? `${n.toLocaleString("nl-NL",{maximumFractionDigits:1})}%` : `${Math.round(n)}%`; }
 function ingKey(n){ return (n||"").trim().toLowerCase(); }
 function unitLabel(u){ return u === "stuks" ? "stuk" : u; }
 function displayPrice(price, unit){
@@ -4660,8 +4663,51 @@ function foodcostClass(f){
 
 // --- Slim koppelen: vergelijkbare namen uit de prijslijst en basisrecepten ---
 const MATCH_STOP = new Set(["de","het","een","van","en","met","in","op","vers","verse","biologisch","biologische","bio","per","stuks","stuk","kg","gr","gram","ml","cl","liter","pak","zak","doos","emmer","fles","blik","pot","bak","naturel","ca","gekoeld","diepvries"]);
+// English recipe words to the Dutch names used in the price list.
+const EN_PHRASES = [
+  ["room temperature",""],["all purpose flour","bloem"],["plain flour","bloem"],["bread flour","tarwebloem"],["strong flour","tarwebloem"],
+  ["whole wheat flour","volkorenmeel"],["wholemeal flour","volkorenmeel"],["whole grain flour","volkorenmeel"],["rye flour","roggemeel"],["spelt flour","speltmeel"],
+  ["almond flour","amandelmeel"],["ground almonds","amandelmeel"],["almond meal","amandelmeel"],["almond milk","amandelmelk"],["oat milk","havermelk"],
+  ["granulated sugar","kristalsuiker"],["caster sugar","fijne kristalsuiker"],["superfine sugar","fijne kristalsuiker"],["icing sugar","poedersuiker"],["powdered sugar","poedersuiker"],["confectioners sugar","poedersuiker"],
+  ["brown sugar","basterdsuiker"],["light brown sugar","basterdsuiker"],["dark brown sugar","donkere basterdsuiker"],["cane sugar","rietsuiker"],["vanilla sugar","vanillesuiker"],
+  ["egg whites","eiwit"],["egg white","eiwit"],["egg yolks","eidooier"],["egg yolk","eidooier"],["whole eggs","ei"],
+  ["baking powder","bakpoeder"],["baking soda","zuiveringszout"],["bicarbonate of soda","zuiveringszout"],["instant yeast","instant gist"],["dry yeast","droge gist"],["dried yeast","droge gist"],["fresh yeast","verse gist"],
+  ["heavy cream","slagroom"],["double cream","slagroom"],["whipping cream","slagroom"],["single cream","kookroom"],["sour cream","zure room"],["cream cheese","roomkaas"],["creme fraiche","creme fraiche"],
+  ["whole milk","volle melk"],["skimmed milk","magere melk"],["butter milk","karnemelk"],["brown butter","boter"],
+  ["olive oil","olijfolie"],["sunflower oil","zonnebloemolie"],["vegetable oil","plantaardige olie"],["sesame oil","sesamolie"],["rapeseed oil","raapzaadolie"],
+  ["sea salt","zeezout"],["flaky salt","zeezout vlokken"],["kosher salt","zout"],["black pepper","zwarte peper"],["white pepper","witte peper"],["chili flakes","chilivlokken"],["red pepper flakes","chilivlokken"],
+  ["vanilla extract","vanille extract"],["vanilla bean","vanillestokje"],["vanilla pod","vanillestokje"],["dark chocolate","pure chocolade"],["milk chocolate","melkchocolade"],["white chocolate","witte chocolade"],["cocoa powder","cacaopoeder"],
+  ["maple syrup","ahornsiroop"],["golden syrup","goudsiroop"],["corn starch","maizena"],["cornstarch","maizena"],["corn flour","maizena"],
+  ["pine nuts","pijnboompitten"],["sesame seeds","sesamzaad"],["sunflower seeds","zonnebloempitten"],["pumpkin seeds","pompoenpitten"],["poppy seeds","maanzaad"],["flax seeds","lijnzaad"],["linseed","lijnzaad"],
+  ["spring onion","lente ui"],["green onion","lente ui"],["red onion","rode ui"],["bay leaf","laurier"],["bay leaves","laurier"],["soy sauce","sojasaus"],["lemon zest","citroen"],["lemon juice","citroensap"],["lime juice","limoensap"],["orange zest","sinaasappel"],
+];
+const EN_WORDS = {flour:"bloem",sugar:"suiker",butter:"boter",egg:"ei",eggs:"ei",milk:"melk",cream:"room",salt:"zout",almond:"amandel",walnut:"walnoot",hazelnut:"hazelnoot",pistachio:"pistache",pecan:"pecannoot",cashew:"cashewnoot",peanut:"pinda",
+  honey:"honing",yeast:"gist",oil:"olie",vinegar:"azijn",lemon:"citroen",lime:"limoen",orange:"sinaasappel",apple:"appel",pear:"peer",cinnamon:"kaneel",nutmeg:"nootmuskaat",ginger:"gember",garlic:"knoflook",onion:"ui",shallot:"sjalot",
+  carrot:"wortel",potato:"aardappel",tomato:"tomaat",tomatoe:"tomaat",mushroom:"champignon",parsley:"peterselie",thyme:"tijm",rosemary:"rozemarijn",basil:"basilicum",mint:"munt",sage:"salie",dill:"dille",chive:"bieslook",tarragon:"dragon",
+  chocolate:"chocolade",cocoa:"cacao",oat:"haver",oats:"havervlokken",rye:"rogge",wheat:"tarwe",cheese:"kaas",yogurt:"yoghurt",yoghurt:"yoghurt",raisin:"rozijn",cherry:"kers",cherrie:"kers",strawberry:"aardbei",strawberrie:"aardbei",raspberry:"framboos",raspberrie:"framboos",blueberry:"blauwe bes",blueberrie:"blauwe bes",
+  beef:"rundvlees",chicken:"kip",pork:"varkensvlees",salmon:"zalm",pepper:"peper",mustard:"mosterd",stock:"bouillon",broth:"bouillon",wine:"wijn",rice:"rijst",celeriac:"knolselderij",celery:"bleekselderij",leek:"prei",cabbage:"kool",beetroot:"biet",beet:"biet",
+  pumpkin:"pompoen",squash:"pompoen",spinach:"spinazie",cucumber:"komkommer",gelatin:"gelatine",gelatine:"gelatine",starch:"zetmeel",semolina:"griesmeel",buttermilk:"karnemelk",malt:"mout",seed:"zaad",fennel:"venkel",cumin:"komijn",
+  coriander:"koriander",cilantro:"koriander",cardamom:"kardemom",clove:"kruidnagel",anise:"anijs",saffron:"saffraan",water:"water",date:"dadel",fig:"vijg",plum:"pruim",apricot:"abrikoos",quince:"kweepeer",rhubarb:"rabarber",
+  coffee:"koffie",tea:"thee",beer:"bier",cider:"cider",molasses:"melasse",treacle:"melasse",jam:"jam",lard:"reuzel",duck:"eend",lamb:"lam",venison:"hert",hare:"haas",rabbit:"konijn",egg_white:"eiwit"};
+const EN_STOP = new Set(["fresh","melted","chopped","diced","sliced","minced","softened","large","small","medium","whole","plain","all","purpose","finely","roughly","of","the","and","or","an","cold","hot","extra","virgin","organic","ripe","toasted","roasted","peeled","raw","active","granulated","cup","cups","tbsp","tsp","tablespoon","teaspoon","pinch","handful","optional","for","to","taste","about","grated","zest","juice","good","quality","pure","unsweetened","sweetened","packed","sifted","beaten","lightly","at"]);
+const EN_FORM = {unsalted:"ongezouten",salted:"gezouten",ground:"gemalen",dried:"gedroogd",dry:"droog",flaked:"vlokken",flakes:"vlokken",powder:"poeder",smoked:"gerookt"};
+function enToNl(str){
+  let x = " " + str + " ";
+  EN_PHRASES.forEach(([en,nl])=>{ x = x.split(" " + en + " ").join(" " + nl + " "); });
+  return x.split(/\s+/).filter(Boolean).map(w=>{
+    if(EN_STOP.has(w)) return "";
+    if(EN_FORM[w]) return EN_FORM[w];
+    if(EN_WORDS[w]) return EN_WORDS[w];
+    const sg = w.replace(/ies$/, "y").replace(/(es|s)$/, "");
+    if(w.length > 3 && EN_WORDS[sg]) return EN_WORDS[sg];
+    const sg2 = w.replace(/s$/, "");
+    if(w.length > 3 && EN_WORDS[sg2]) return EN_WORDS[sg2];
+    return w;
+  }).join(" ");
+}
 function normTokens(s){
-  return (s||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9 ]+/g," ")
+  const base = (s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9 ]+/g," ").replace(/\s+/g," ").trim();
+  return enToNl(base)
     .split(/\s+/).filter(t=>t.length > 1 && !MATCH_STOP.has(t) && !/^\d/.test(t))
     .map(t=>t.length > 4 ? t.replace(/(eren|en|s)$/, "") : t);
 }
@@ -4678,7 +4724,7 @@ function nameSimilarity(a, b){
   return (ha*2 + hb) / 3;
 }
 // Product words: a "kaneelkoek" is not what a recipe means by "kaneel".
-const MATCH_PRODUCT = new Set(["koek","koekje","koekjes","taart","saus","mix","siroop","stroop","thee","drop","chip","chips","reep","ijs","cake","broodje","jam","likeur","sap","snoep","bonbon","bonbons","dressing","marinade","pasta","spread","yoghurt","vla","pudding","toffee","koffie","blokje","bouillon","drank","wafel","wafels","snack","bar","crumble"]);
+const MATCH_PRODUCT = new Set(["melk","drink","barista","koek","koekje","koekjes","taart","saus","mix","siroop","stroop","thee","drop","chip","chips","reep","ijs","cake","broodje","jam","likeur","sap","snoep","bonbon","bonbons","dressing","marinade","pasta","spread","yoghurt","vla","pudding","toffee","koffie","blokje","bouillon","drank","wafel","wafels","snack","bar","crumble"]);
 const MATCH_FORM = new Set(["poeder","gemalen","gemaal","vers","verse","heel","hele","gedroogd","gedroogde","vlok","vlokken","korrel","korrels","blad","bladeren","zaad","zaden","fijn","grof","puur","naturel","ongezouten","gezouten","ongezout","gezout"]);
 function matchScore(t, cand){
   let s = nameSimilarity(t, cand);
@@ -4873,7 +4919,7 @@ document.getElementById("pickCancel").addEventListener("click", closePicker);
 document.getElementById("pickOverlay").addEventListener("click", (e)=>{ if(e.target.id === "pickOverlay") closePicker(); });
 
 // Bulk: best guess for every missing ingredient; confident ones pre-ticked.
-function openBulkLink(missing){
+function openBulkLink(missing, after){
   const rows = missing.map(m=>{
     const top = suggestMatches(m.name, null, 2, 0.5, m.recipes);
     const best = top[0] || null;
@@ -4881,7 +4927,7 @@ function openBulkLink(missing){
     const sure = !!best && best.score >= 0.8 && (!top[1] || best.score - top[1].score >= 0.1);
     return { name:m.name, count:m.recipes.size, recipes:m.recipes, best, on: sure };
   });
-  pickCtx = { mode:"bulk", rows };
+  pickCtx = { mode:"bulk", rows, after };
   document.getElementById("pickTitle").textContent = "Automatisch koppelen";
   document.querySelector("#pickOverlay .pick-search").classList.add("hidden");
   document.getElementById("pickFoot").classList.remove("hidden");
@@ -4923,8 +4969,9 @@ document.getElementById("pickApply").addEventListener("click", async ()=>{
   if(!sel.length){ closePicker(); return; }
   sel.forEach(r=>{ state.priceAliases[ingKey(r.name)] = r.best.key; });
   await saveState();
+  const after = pickCtx.after;
   closePicker();
-  renderCalcPrices();
+  if(after) after(); else renderCalcPrices();
   showToast(`${sel.length} ingrediënten gekoppeld.`);
 });
 
@@ -5048,7 +5095,7 @@ function renderCostBody(recipeId){
         : `${f.priced} van ${f.count} ingrediënten compleet. De ontbrekende staan bovenaan; tot die tijd is de kostprijs te laag.`}</div>
     </div>
 
-    <div class="cm-section-title">Ingrediënten</div>
+    <div class="cm-section-title">Ingrediënten${f.complete ? "" : ` <button type="button" class="cm-auto" id="cmAuto">Koppel automatisch</button>`}</div>
     <div class="cm-head"><span>Ingrediënt</span><span>Hoeveelheid</span><span>Bruikbare prijs</span><span>Rend.</span><span>Kosten</span><span>Aandeel</span></div>
     <div class="cm-lines">${lines.map(lineHTML).join("")}</div>
 
@@ -5060,8 +5107,10 @@ function renderCostBody(recipeId){
       <label>Doel-foodcost %<input type="number" inputmode="numeric" id="cmTarget" min="1" max="99" step="1" value="${f.target || ""}" placeholder="bijv. 30"></label>
     </div>
     <div class="cm-facts">
-      ${f.sellExcl != null ? `<div><span>Verkoopprijs excl. btw</span><b>${eur(f.sellExcl)}</b></div>` : ""}
-      ${f.adviceIncl != null ? `<div><span>Adviesprijs bij ${f.target}% foodcost</span><b>${eur(f.adviceIncl)} incl.</b></div>` : ""}
+      ${f.adviceIncl != null ? `<div><span>Adviesprijs bij ${f.target}% foodcost</span><b>${eur(f.adviceIncl)} <small>incl. · ${eur(f.adviceIncl / (1 + f.vat/100))} excl.</small></b></div>` : ""}
+      ${f.sellIncl != null ? `<div><span>Werkelijke verkoopprijs</span><b>${eur(f.sellIncl)} <small>incl. · ${eur(f.sellExcl)} excl.</small></b></div>` : ""}
+      ${f.marginEur != null ? `<div><span>Brutomarge</span><b>${eur(f.marginEur)} <small>p.p. · ${pct(100 - f.foodcostPct)}</small></b></div>` : ""}
+      ${f.foodcostPct != null && f.complete && f.foodcostPct < 5 ? `<p class="cost-note warn-note">Foodcost onder 5% is ongebruikelijk. Klopt de verkoopprijs per portie en het aantal porties?</p>` : ""}
       ${!f.portions ? `<p class="cost-note">Vul het aantal porties in voor de kostprijs en foodcost per portie.</p>` : ""}
     </div>
 
@@ -5074,6 +5123,15 @@ function renderCostBody(recipeId){
 
   const rerender = (msg)=>{ renderCostBody(recipeId); if(msg) showToast(msg); };
   wireFixers(body, r.id, rerender);
+  const auto = document.getElementById("cmAuto");
+  if(auto) auto.addEventListener("click", ()=>{
+    const seen = new Map();
+    f.lines.filter(l=>!l.complete && l.reason !== "subpartial").forEach(l=>{
+      const k = ingKey(l.ing.name);
+      if(!seen.has(k)) seen.set(k, { name:l.ing.name.trim(), unit:l.unit, recipes:new Set([r.id]) });
+    });
+    openBulkLink(Array.from(seen.values()), ()=>renderCostBody(recipeId));
+  });
   body.querySelectorAll(".cm-line-main").forEach(btn=>btn.addEventListener("click", ()=>{
     const idx = +btn.closest(".cm-line").dataset.idx;
     calcOpenRow = calcOpenRow === idx ? null : idx;
