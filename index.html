@@ -14,6 +14,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.0.4/tesseract.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
@@ -980,7 +981,7 @@
           <button data-action="prices"><span id="importMenuPricesIcon"></span> Prijslijst (Excel)</button>
         </div>
       </div>
-      <button class="header-icon-btn" id="exportBtn" title="Backup exporteren"></button>
+      <button class="header-icon-btn" id="exportBtn" title="Volledige backup (met foto's)"></button>
       <button class="header-icon-btn" id="importBtn" title="Backup importeren"></button>
     </div>
   </div>
@@ -1303,7 +1304,7 @@
 <input type="file" id="pinFileInput" accept="image/*" style="display:none">
 <input type="file" id="pinCameraInput" accept="image/*" capture="environment" style="display:none">
 <input type="file" id="priceInput" accept=".xlsx,.xls,.csv" style="display:none">
-<input type="file" id="importInput" accept="application/json,.json" style="display:none">
+<input type="file" id="importInput" accept="application/json,.json,application/zip,.zip" style="display:none">
 <input type="file" id="docxInput" accept=".docx" multiple style="display:none">
 <datalist id="knownIngredients"></datalist>
 <input type="file" id="pdfInput" accept=".pdf" style="display:none">
@@ -1909,8 +1910,9 @@ function openMoreSheet(){
       { icon:ic("euro"), label:"Prijslijst (Excel)", fn:()=>document.getElementById("priceInput").click() },
     ]},
     { id:"data", heading:"Backup en export", items:[
-      { icon:ic("download"), label:"Backup exporteren", fn:()=>exportData() },
-      { icon:ic("importIcon"), label:"Backup importeren", fn:()=>document.getElementById("importInput").click() },
+      { icon:ic("download"), label:"Volledige backup (met foto's)", fn:()=>exportFullBackup() },
+      { icon:ic("download"), label:"Alleen de gegevens (JSON)", fn:()=>exportData() },
+      { icon:ic("importIcon"), label:"Backup terugzetten (zip of JSON)", fn:()=>document.getElementById("importInput").click() },
       { icon:ic("printer"), label:"Huidige receptlijst als PDF", fn:()=>exportRecipeListAsPDF(getVisibleRecipes()) },
     ]},
   ]);
@@ -5781,19 +5783,19 @@ async function translateEditorFields(){
   }
 }
 
-function exportData(){
-  const payload = {
+// Everything that is saved in the database, nothing left out
+function backupPayload(){
+  return {
     exportedAt: new Date().toISOString(),
-    recipes: state.recipes,
-    scales: state.scales,
-    listIds: state.listIds,
-    photos: state.photos,
-    gallery: state.gallery,
-    attachments: state.attachments,
-    breadOrder: state.breadOrder,
-    categoryOrder: state.categoryOrder,
-    hideWtTab: state.hideWtTab,
+    recipes: state.recipes, scales: state.scales, listIds: state.listIds,
+    photos: state.photos, gallery: state.gallery, attachments: state.attachments,
+    ingredientPrices: state.ingredientPrices, inspirations: state.inspirations, priceAliases: state.priceAliases,
+    werkschema: state.werkschema, useLargeUnits: state.useLargeUnits,
+    breadOrder: state.breadOrder, categoryOrder: state.categoryOrder, hideWtTab: state.hideWtTab,
   };
+}
+function exportData(){
+  const payload = backupPayload();
   const blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"});
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -5811,7 +5813,89 @@ function dataUrlToBlob(dataUrl){
   return fetch(dataUrl).then(res=>res.blob());
 }
 
+// --- Full backup: one zip with all data AND every photo and attachment (the JSON alone only holds links).
+// With this zip the whole book can be put back, also on a new database or another host.
+const STORAGE_MARK = "/storage/v1/object/public/recipe-files/";
+function storageUrlsIn(obj){
+  const found = new Set();
+  const re = /https?:\/\/[^"'\s]+\/storage\/v1\/object\/public\/recipe-files\/[^"'\s]+/g;
+  (JSON.stringify(obj).match(re) || []).forEach(u=>found.add(u));
+  return [...found];
+}
+function storagePathOf(url){ const i = url.indexOf(STORAGE_MARK); return i < 0 ? null : decodeURIComponent(url.slice(i + STORAGE_MARK.length).split("?")[0]); }
+async function exportFullBackup(){
+  if(typeof JSZip === "undefined"){ showToast("De backup-module is niet geladen. Controleer je internet en probeer het opnieuw."); return; }
+  const payload = backupPayload();
+  const urls = storageUrlsIn(payload);
+  const zip = new JSZip();
+  zip.file("backup.json", JSON.stringify(payload, null, 2));
+  let ok = 0, fail = 0;
+  showToast(`Backup maken: ${urls.length} bestanden ophalen…`);
+  for(let i = 0; i < urls.length; i += 6){
+    await Promise.all(urls.slice(i, i + 6).map(async (u)=>{
+      try{
+        const r = await fetch(u, { cache: "no-store" });
+        if(!r.ok) throw new Error(r.status);
+        zip.file("bestanden/" + storagePathOf(u), await r.blob());
+        ok++;
+      }catch(e){ fail++; console.warn("Niet opgehaald:", u, e); }
+    }));
+  }
+  zip.file("LEESMIJ.txt", [
+    "Volledige backup van de Receptendatabase, " + new Date().toLocaleString("nl-NL"),
+    "",
+    "backup.json   alle recepten, prijzen, schema's en instellingen",
+    "bestanden/    alle foto's en bijlagen (" + ok + " bestanden)",
+    "",
+    "Terugzetten: Meer > Backup terugzetten, en kies deze zip.",
+    "De foto's en bijlagen worden dan opnieuw geupload, ook naar een nieuwe database.",
+  ].join("\n"));
+  const blob = await zip.generateAsync({ type: "blob", compression: "DEFLATE", compressionOptions: { level: 6 } });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `receptendatabase-volledig-${new Date().toISOString().slice(0,10)}.zip`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 60000);
+  showToast(fail ? `Backup gemaakt, maar ${fail} van ${urls.length} bestanden konden niet worden opgehaald.` : `Backup gemaakt: alle recepten en ${ok} bestanden.`);
+}
+// Restore from a full backup zip: upload every file again, then point the data to the new links
+async function importZip(file){
+  if(typeof JSZip === "undefined"){ showToast("De backup-module is niet geladen. Controleer je internet en probeer het opnieuw."); return; }
+  let zip, text;
+  try{ zip = await JSZip.loadAsync(file); text = await zip.file("backup.json").async("string"); }
+  catch(e){ showToast("Dit is geen volledige backup van de Receptendatabase."); return; }
+  let parsed;
+  try{ parsed = JSON.parse(text); }catch(e){ showToast("Ongeldig back-upbestand."); return; }
+  if(!parsed || !Array.isArray(parsed.recipes)){ showToast("Dit bestand bevat geen geldige recepten."); return; }
+  if(!confirm("Dit vervangt al je huidige recepten, foto's en instellingen door de backup. Doorgaan?")) return;
+  const urls = storageUrlsIn(parsed);
+  const map = {}; let ok = 0, fail = 0;
+  showToast(`Terugzetten: ${urls.length} bestanden uploaden…`);
+  for(let i = 0; i < urls.length; i += 4){
+    await Promise.all(urls.slice(i, i + 4).map(async (u)=>{
+      const path = storagePathOf(u); const f = path && zip.file("bestanden/" + path);
+      if(!f){ fail++; return; }
+      try{
+        const blob = await f.async("blob");
+        const ext = (path.split(".").pop() || "").toLowerCase();
+        const type = ext === "pdf" ? "application/pdf" : ext === "png" ? "image/png" : ext === "webp" ? "image/webp" : "image/jpeg";
+        map[u] = await uploadToStorage(path, blob, type); ok++;
+      }catch(e){ fail++; console.warn("Upload mislukt:", path, e); }
+    }));
+  }
+  let fixed = text;
+  for(const [from, to] of Object.entries(map)) fixed = fixed.split(from).join(to);
+  const data = JSON.parse(fixed);
+  applyStateData(data);
+  state.recipes = data.recipes;
+  state.selectedId = state.recipes[0]?.id || null;
+  await saveState();
+  renderSidebar(); renderDetail(); renderFloatBar();
+  showToast(fail ? `Teruggezet, maar ${fail} van ${urls.length} bestanden ontbraken of konden niet worden geupload.` : `Backup teruggezet: alle recepten en ${ok} bestanden.`);
+}
+
 async function importData(file){
+  if(/\.zip$/i.test(file.name) || file.type === "application/zip" || file.type === "application/x-zip-compressed") return importZip(file);
   const reader = new FileReader();
   reader.onerror = ()=>showToast("Bestand kon niet worden gelezen.");
   reader.onload = async ()=>{
@@ -5825,6 +5909,10 @@ async function importData(file){
     state.scales = parsed.scales || {};
     state.listIds = parsed.listIds || [];
     state.ingredientPrices = parsed.ingredientPrices || {};
+    if(parsed.inspirations) state.inspirations = parsed.inspirations;
+    if(parsed.priceAliases) state.priceAliases = parsed.priceAliases;
+    if(parsed.werkschema) state.werkschema = parsed.werkschema;
+    if(parsed.useLargeUnits != null) state.useLargeUnits = !!parsed.useLargeUnits;
     if(parsed.breadOrder) state.breadOrder = parsed.breadOrder;
     if(parsed.categoryOrder) state.categoryOrder = parsed.categoryOrder;
     if(parsed.hideWtTab != null) state.hideWtTab = !!parsed.hideWtTab;
@@ -5949,7 +6037,7 @@ document.getElementById("werkschemaOverlay").addEventListener("click", (e)=>{
 });
 document.getElementById("deleteRecipe").innerHTML = ICONS.trash + " Verwijderen";
 document.getElementById("duplicateRecipeBtn").innerHTML = ICONS.copy + " Dupliceren";
-document.getElementById("exportBtn").addEventListener("click", exportData);
+document.getElementById("exportBtn").addEventListener("click", exportFullBackup);
 document.getElementById("importBtn").addEventListener("click", ()=>document.getElementById("importInput").click());
 document.getElementById("importInput").addEventListener("change", (e)=>{
   const file = e.target.files && e.target.files[0];
